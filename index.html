@@ -28,7 +28,32 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-main); padding: 25px 15px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
     .container { max-width: 1020px; width: 100%; }
-    
+    /* 背包排序与筛选栏样式 */
+    .deck-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .deck-controls select {
+      flex: 1;
+      min-width: 110px;
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .deck-controls select:focus {
+      border-color: var(--accent-color);
+    }
     /* 头部玩家信息 */
     header { text-align: center; margin-bottom: 20px; position: relative; }
     header h1 { font-size: 2.2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
@@ -247,7 +272,38 @@
         </div>
 
         <div class="deck-area">
-          <h3>🎒 我的怪兽背包 (<span id="monsterCount">0</span>)</h3>
+          <h3>🎒 我的怪兽背包 (<span id="monsterCount">0</span>)</h3><!-- 背包排序与筛选控制栏 -->
+          <div class="deck-controls">
+            <select id="deckFilterRarity" onchange="updateDeckUI()">
+              <option value="ALL">全部稀有度</option>
+              <option value="UR">UR</option>
+              <option value="SSR">SSR</option>
+              <option value="SR">SR</option>
+              <option value="R">R</option>
+              <option value="N">N</option>
+            </select>
+    
+            <select id="deckFilterElement" onchange="updateDeckUI()">
+              <option value="ALL">全部元素</option>
+              <option value="🔥 火系">🔥 火系</option>
+              <option value="💧 水系">💧 水系</option>
+              <option value="⚡ 雷系">⚡ 雷系</option>
+              <option value="🌿 草系">🌿 草系</option>
+              <option value="💀 暗系">💀 暗系</option>
+              <option value="✨ 圣系">✨ 圣系</option>
+              <option value="🌋 岩系">🌋 岩系</option>
+              <option value="🌪️ 气系">🌪️ 气系</option>
+            </select>
+
+            <select id="deckSortBy" onchange="updateDeckUI()">
+              <option value="time_desc">最新获得</option>
+              <option value="time_asc">最早获得</option>
+              <option value="rarity_desc">稀有度 (高 → 低)</option>
+              <option value="rarity_asc">稀有度 (低 → 高)</option>
+              <option value="atk_desc">攻击力 (高 → 低)</option>
+              <option value="hp_desc">生命值 (高 → 低)</option>
+            </select>
+          </div>
           <div id="monsterGrid" class="monster-grid" style="margin-top:12px;"></div>
         </div>
       </div>
@@ -1014,11 +1070,58 @@ function updateDeckUI() {
   document.getElementById('pveRewardInfo').innerText = `通关成功奖励：本难度进度 +1 ｜ 玩家等级 +${diffCfg.lvlAdd}`;
 
   const grid = document.getElementById('monsterGrid');
-  const keys = Object.keys(myDeck);
-  document.getElementById('monsterCount').innerText = keys.length;
+  let keys = Object.keys(myDeck);
+
+  // 1. 获取筛选与排序条件
+  const filterRarity = document.getElementById('deckFilterRarity') ? document.getElementById('deckFilterRarity').value : 'ALL';
+  const filterElement = document.getElementById('deckFilterElement') ? document.getElementById('deckFilterElement').value : 'ALL';
+  const sortBy = document.getElementById('deckSortBy') ? document.getElementById('deckSortBy').value : 'time_desc';
+
+  // 2. 执行筛选 (Filter)
+  keys = keys.filter(code => {
+    const m = myDeck[code];
+    if (filterRarity !== 'ALL' && m.rarity !== filterRarity) return false;
+    if (filterElement !== 'ALL' && m.element !== filterElement) return false;
+    return true;
+  });
+
+  // 稀有度权重表（用于排序）
+  const rarityWeights = { 'UR': 5, 'SSR': 4, 'SR': 3, 'R': 2, 'N': 1 };
+
+  // 3. 执行排序 (Sort)
+  keys.sort((a, b) => {
+    const mA = myDeck[a];
+    const mB = myDeck[b];
+    const scaledA = getMonsterScaledStats(mA, playerLevel);
+    const scaledB = getMonsterScaledStats(mB, playerLevel);
+
+    switch (sortBy) {
+      case 'time_asc':
+        return 0; // 原始 key 顺序（最早）
+      case 'rarity_desc':
+        return rarityWeights[mB.rarity] - rarityWeights[mA.rarity];
+      case 'rarity_asc':
+        return rarityWeights[mA.rarity] - rarityWeights[mB.rarity];
+      case 'atk_desc':
+        return scaledB.atk - scaledA.atk;
+      case 'hp_desc':
+        return scaledB.hp - scaledA.hp;
+      case 'time_desc':
+      default:
+        return -1; // 默认倒序（最新）
+    }
+  });
+
+  // 4. 更新数量显示与渲染卡片列表
+  document.getElementById('monsterCount').innerText = `${keys.length} / ${Object.keys(myDeck).length}`;
   grid.innerHTML = '';
 
-  keys.slice().reverse().forEach(code => {
+  if (keys.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px 0;">未找到符合条件的怪兽</div>';
+    return;
+  }
+
+  keys.forEach(code => {
     const m = myDeck[code];
     const tierColor = TIER_COLORS[m.tierIndex || 0];
     const thumb = document.createElement('div');
@@ -1041,12 +1144,24 @@ function updateDeckUI() {
 
 function populateSelectOptions() {
   const keys = Object.keys(myDeck);
+
+  // 稀有度权重表（高到低）
+  const rarityWeights = { 'UR': 5, 'SSR': 4, 'SR': 3, 'R': 2, 'N': 1 };
+
+  // 按稀有度从高到低排序
+  keys.sort((a, b) => {
+    const weightA = rarityWeights[myDeck[a].rarity] || 0;
+    const weightB = rarityWeights[myDeck[b].rarity] || 0;
+    return weightB - weightA;
+  });
+
   let html = '<option value="">-- 请选择出战怪兽 --</option>';
   keys.forEach(k => {
     const m = myDeck[k];
     const tierName = m.tierName ? ` · ${m.tierName}` : '';
     html += `<option value="${k}">${m.emoji} ${m.name} (${m.rarity}${tierName})</option>`;
   });
+
   document.getElementById('selectA').innerHTML = html;
   document.getElementById('selectB').innerHTML = html;
   document.getElementById('pveFighterSelect').innerHTML = html;
