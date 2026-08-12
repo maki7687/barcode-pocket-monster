@@ -1,3 +1,4 @@
+# 点击游玩： https://maki7687.github.io/barcode-pocket-monster/
 # 👾 Barcode Pocket Monster (Barcode Monster Deck)
 
 **Barcode Pocket Monster** 是一款基于 HTML5 与 JavaScript 开发的轻量级、无需后端的 Web 扫码怪兽对战与收集游戏。玩家可以扫描现实生活中的任何条形码（或手动输入条码文本），将它们转化为独一无二的怪兽，体验收集、PVP 模拟对战与 PVE 副本闯关的乐趣。
