@@ -28,6 +28,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-main); padding: 25px 15px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
     .container { max-width: 1020px; width: 100%; }
+    
     /* 背包排序与筛选栏样式 */
     .deck-controls {
       display: flex;
@@ -54,6 +55,7 @@
     .deck-controls select:focus {
       border-color: var(--accent-color);
     }
+    
     /* 头部玩家信息 */
     header { text-align: center; margin-bottom: 20px; position: relative; }
     header h1 { font-size: 2.2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
@@ -91,7 +93,6 @@
     .tag-R { background: #3b82f6; color: #fff; }
     .tag-N { background: #64748b; color: #fff; }
 
-    /* 成长资质勋章样式 */
     .growth-badge { padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 
     .avatar-box { background: rgba(0, 0, 0, 0.3); border-radius: 14px; height: 130px; display: flex; align-items: center; justify-content: center; font-size: 68px; position: relative; margin-bottom: 12px; }
@@ -122,12 +123,10 @@
     .battle-btn { width: 100%; background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1.05rem; cursor: pointer; margin-bottom: 18px; transition: opacity 0.2s; }
     .battle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* 擂台 stage & 漂浮伤害文字容器 */
     .arena-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 18px; background: #090d16; border: 2px solid var(--border-color); border-radius: 16px; padding: 18px; position: relative; overflow: hidden; }
     .monster-fighter { background: #1e293b; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; align-items: center; position: relative; border: 2px solid var(--border-color); }
     .fighter-avatar { font-size: 58px; margin: 8px 0; position: relative; transition: transform 0.15s ease-out; }
 
-    /* 战斗对战面板细节卡片样式 */
     .fighter-stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -171,7 +170,7 @@
     @keyframes flashBlueAnim { 0% { box-shadow: 0 0 30px #38bdf8; } 100% { box-shadow: none; } }
     .flash-blue { animation: flashBlueAnim 0.5s ease-out; }
 
-    /* 统一的血条与蓝条动画与外形逻辑 */
+    /* 血条与蓝条 */
     .bar-container { width: 100%; margin-top: 6px; }
     .bar-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px; }
     .progress-bar-wrap { width: 100%; height: 10px; background: #0f172a; border-radius: 5px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
@@ -187,7 +186,7 @@
     .status-freeze { background: #0284c7; }
     .status-slow { background: #d97706; }
 
-    /* 浮动伤害数字 popup */
+    /* 浮动伤害数字 */
     .floating-num-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
     .float-num { position: absolute; font-weight: 900; font-size: 1.3rem; animation: floatUp 0.85s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
     .num-normal { color: #ef4444; }
@@ -195,7 +194,6 @@
     .num-skill { color: #c084fc; font-size: 1.5rem; }
     .num-miss { color: #38bdf8; font-size: 1.2rem; }
     .num-status { color: #fb923c; font-size: 1.1rem; }
-    .num-heal { color: #4ade80; font-size: 1.2rem; }
 
     @keyframes floatUp {
       0% { opacity: 1; transform: translateY(0) scale(0.8); }
@@ -206,7 +204,6 @@
     /* 日志 */
     .battle-log-box { background: #090d16; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.5; }
     .log-line { margin-bottom: 4px; }
-    .log-time { color: #64748b; font-size: 0.75rem; margin-right: 4px; }
     .log-crit { color: #facc15; font-weight: bold; }
     .log-skill { color: #c084fc; font-weight: bold; }
     .log-miss { color: #38bdf8; }
@@ -272,7 +269,7 @@
         </div>
 
         <div class="deck-area">
-          <h3>🎒 我的怪兽背包 (<span id="monsterCount">0</span>)</h3><!-- 背包排序与筛选控制栏 -->
+          <h3>🎒 我的怪兽背包 (<span id="monsterCount">0</span>)</h3>
           <div class="deck-controls">
             <select id="deckFilterRarity" onchange="updateDeckUI()">
               <option value="ALL">全部稀有度</option>
@@ -302,6 +299,7 @@
               <option value="rarity_asc">稀有度 (低 → 高)</option>
               <option value="atk_desc">攻击力 (高 → 低)</option>
               <option value="hp_desc">生命值 (高 → 低)</option>
+	      <option value="spd_desc">攻击速度 (高 → 低)</option>
             </select>
           </div>
           <div id="monsterGrid" class="monster-grid" style="margin-top:12px;"></div>
@@ -324,11 +322,9 @@
           </div>
         </div>
 
-        <!-- 擂台主舞台 -->
         <div class="arena-stage" id="arenaStage">
           <div class="floating-num-container" id="floatContainer"></div>
           
-          <!-- 左侧 A -->
           <div class="monster-fighter" id="fighterCardA">
             <div style="font-weight: bold; font-size: 1rem;" id="nameA">--</div>
             <div id="badgeA" style="margin-top:2px;"></div>
@@ -347,13 +343,10 @@
               <div class="progress-bar-wrap"><div class="mp-fill" id="mpBarA"></div></div>
             </div>
 
-            <!-- 我方怪兽数值细节网格 -->
             <div class="fighter-stats-grid" id="statsA"></div>
-            <!-- 我方怪兽技能细节面板 -->
             <div class="fighter-skill-box" id="skillA"></div>
           </div>
 
-          <!-- 右侧 B -->
           <div class="monster-fighter" id="fighterCardB">
             <div style="font-weight: bold; font-size: 1rem;" id="nameB">--</div>
             <div id="badgeB" style="margin-top:2px;"></div>
@@ -372,9 +365,7 @@
               <div class="progress-bar-wrap"><div class="mp-fill" id="mpBarB"></div></div>
             </div>
 
-            <!-- 敌方怪兽数值细节网格 -->
             <div class="fighter-stats-grid" id="statsB"></div>
-            <!-- 敌方怪兽技能细节面板 -->
             <div class="fighter-skill-box" id="skillB"></div>
           </div>
         </div>
@@ -390,7 +381,6 @@
         <h2 style="color:var(--accent-color); margin-bottom:10px;">🗡️ 冒险关卡挑战</h2>
         <p style="color:var(--text-muted); margin-bottom:15px;">切换难度突破进度，提升玩家等级，全面强化所有背包怪兽！</p>
         
-        <!-- PVE 难度选择面板 -->
         <div class="difficulty-selector">
           <button class="diff-btn diff-normal active" id="btnDiffNormal" onclick="selectDifficulty('normal')">🟢 普通</button>
           <button class="diff-btn diff-hard" id="btnDiffHard" onclick="selectDifficulty('hard')">🟡 困难</button>
@@ -423,7 +413,6 @@
          </div>
        </div>
 
-       <!-- 过滤器区域 -->
        <div style="background:#0f172a; padding:12px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:15px; display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
          <div>
            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">解锁状态</label>
@@ -466,7 +455,6 @@
          </div>
        </div>
 
-       <!-- 图鉴网格展示区 -->
        <div class="pokedex-grid" id="pokedexGrid"></div>
      </div>
    </div>
@@ -497,25 +485,47 @@
   </div>
 
 <script>
-// --- 集成的属性计算核心模型配置 ---
+// --- 数值模型与算法配置 ---
+
+const POINT_CONVERSION = {
+  hp: 0.5,
+  atk: 4.0,
+  def: 3.5,
+  crit: 50.0,
+  dodge: 10.0,
+  mpRec: 7.0,
+  atkSpd: 1000.0,
+  hitRate: 10.0,
+  hpRec: 4.0,
+  trueAtk: 4.0,
+  trueDef: 3.5
+};
+
 const RARITY_CONFIGS = {
-  N:   { baseBudget: 3000,  variance: 0.05, minBounds: { atk: 110, def: 20, hp: 1900, crit: 2,  dodge: 12.0, mpRec: 1.0, atkSpd: 0.80, hitRate: 13, hpRec: 30,  trueAtk: 30, trueDef: 20 } },
-  R:   { baseBudget: 4000,  variance: 0.08, minBounds: { atk: 140, def: 45, hp: 2500, crit: 5,  dodge: 16.0, mpRec: 1.5, atkSpd: 0.90, hitRate: 17, hpRec: 50,  trueAtk: 60, trueDef: 50 } },
-  SR:  { baseBudget: 5000, variance: 0.10, minBounds: { atk: 190, def: 70, hp: 2800, crit: 8,  dodge: 21.0, mpRec: 2.0, atkSpd: 1.00, hitRate: 22, hpRec: 80,  trueAtk: 90, trueDef: 80 } },
-  SSR: { baseBudget: 6000, variance: 0.12, minBounds: { atk: 250, def: 95, hp: 3500, crit: 12, dodge: 29.0, mpRec: 2.5, atkSpd: 1.10, hitRate: 30, hpRec: 120, trueAtk: 130, trueDef: 110 } },
-  UR:  { baseBudget: 7000, variance: 0.15, minBounds: { atk: 310, def: 120, hp: 5000, crit: 15, dodge: 35.0, mpRec: 3.5, atkSpd: 1.25, hitRate: 36,hpRec: 160, trueAtk: 170, trueDef: 150 } }
+  N:   { baseBudget: 3900, variance: 0.25, minBounds: { atk: 50, def: 10, hp: 600, crit: 2, dodge: 5.0, mpRec: 1.0, atkSpd: 0.30, hitRate: 10, hpRec: 5, trueAtk: 10, trueDef: 10 } },
+  R:   { baseBudget: 6400, variance: 0.30, minBounds: { atk: 80, def: 25, hp: 1000, crit: 4, dodge: 8.0, mpRec: 1.2, atkSpd: 0.40, hitRate: 12, hpRec: 15, trueAtk: 25, trueDef: 20 } },
+  SR:  { baseBudget: 9600, variance: 0.35, minBounds: { atk: 120, def: 45, hp: 1500, crit: 6, dodge: 12.0, mpRec: 1.5, atkSpd: 0.50, hitRate: 15, hpRec: 30, trueAtk: 45, trueDef: 40 } },
+  SSR: { baseBudget: 13500, variance: 0.40, minBounds: { atk: 170, def: 65, hp: 2200, crit: 8, dodge: 16.0, mpRec: 2.0, atkSpd: 0.60, hitRate: 18, hpRec: 50, trueAtk: 70, trueDef: 60 } },
+  UR:  { baseBudget: 18000, variance: 0.50, minBounds: { atk: 230, def: 90, hp: 3000, crit: 10, dodge: 20.0, mpRec: 2.5, atkSpd: 0.70, hitRate: 22, hpRec: 80, trueAtk: 100, trueDef: 90 } }
 };
 
 const CLASS_WEIGHTS = {
-  ASSASSIN: { atk: 4.5, def: 1.0, hp: 1.5, crit: 3.0, dodge: 4.0, mpRec: 1.0, atkSpd: 4.0, hitRate: 3.0, hpRec: 1.0, trueAtk: 2.5, trueDef: 0.5 },
+  ASSASSIN: { atk: 4.5, def: 1.0, hp: 1.5, crit: 3.5, dodge: 4.0, mpRec: 1.0, atkSpd: 4.0, hitRate: 3.0, hpRec: 1.0, trueAtk: 2.5, trueDef: 0.5 },
   TANK:     { atk: 1.0, def: 3.5, hp: 5.0, crit: 0.5, dodge: 0.5, mpRec: 0.5, atkSpd: 1.0, hitRate: 1.0, hpRec: 4.0, trueAtk: 0.5, trueDef: 3.5 },
-  WARRIOR:  { atk: 3.0, def: 2.5, hp: 3.5, crit: 1.0, dodge: 1.5, mpRec: 1.0, atkSpd: 2.0, hitRate: 2.0, hpRec: 2.5, trueAtk: 1.5, trueDef: 1.5 },
+  WARRIOR:  { atk: 3.0, def: 2.5, hp: 3.5, crit: 1.5, dodge: 1.5, mpRec: 1.0, atkSpd: 2.0, hitRate: 2.0, hpRec: 2.5, trueAtk: 1.5, trueDef: 1.5 },
   MAGE:     { atk: 4.0, def: 1.0, hp: 2.0, crit: 3.0, dodge: 1.5, mpRec: 4.5, atkSpd: 1.0, hitRate: 2.5, hpRec: 1.0, trueAtk: 2.0, trueDef: 0.5 },
-  DEMON:    { atk: 4.0, def: 0.5, hp: 3.5, crit: 2.0, dodge: 2.0, mpRec: 3.0, atkSpd: 2.5, hitRate: 4.0, hpRec: 3.5, trueAtk: 3.5, trueDef: 0.0 }
+  DEMON:    { atk: 4.0, def: 0.5, hp: 3.5, crit: 2.5, dodge: 2.0, mpRec: 3.0, atkSpd: 2.5, hitRate: 4.0, hpRec: 3.5, trueAtk: 3.5, trueDef: 0.0 }
 };
 
-const POINT_CONVERSION = {
-  atk: 0.7, def: 1.5, hp: 3.5, crit: 0.2, dodge: 0.3, mpRec: 0.1, atkSpd: 0.01, hitRate: 0.3, hpRec: 1.5, trueAtk: 2.0, trueDef: 2.5
+const ELEMENT_WEIGHTS = {
+  '🔥 火系': { atk: 1.25, crit: 1.2, trueAtk: 1.15 },
+  '💧 水系': { hpRec: 1.3, mpRec: 1.25, def: 1.1 },
+  '⚡ 雷系': { atkSpd: 1.25, crit: 1.2, hitRate: 1.15 },
+  '🌿 草系': { hp: 1.25, hpRec: 1.3, def: 1.1 },
+  '💀 暗系': { trueAtk: 1.3, crit: 1.15, dodge: 1.1 },
+  '✨ 圣系': { trueDef: 1.3, hpRec: 1.2, hp: 1.15 },
+  '🌋 岩系': { def: 1.3, trueDef: 1.25, hp: 1.1 },
+  '🌪️ 气系': { dodge: 1.3, atkSpd: 1.2, hitRate: 1.15 }
 };
 
 const HERO_CLASSES = ['ASSASSIN', 'TANK', 'WARRIOR', 'MAGE', 'DEMON'];
@@ -534,6 +544,15 @@ const TIER_WEIGHTS_BY_RARITY = {
 
 const STAT_KEYS = ['hp', 'atk', 'def', 'dodge', 'crit', 'skillDmg', 'hitRate', 'hpRec', 'trueAtk', 'trueDef' , 'atkSpd' , 'mpRec'];
 
+function mulberry32(a) {
+  return function() {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 8, t | 30);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
 function rollTierIndex(rarity, customMathRandom = Math.random) {
   const weights = TIER_WEIGHTS_BY_RARITY[rarity] || TIER_WEIGHTS_BY_RARITY.N;
   const totalWeight = weights.reduce((acc, val) => acc + val, 0);
@@ -546,11 +565,12 @@ function rollTierIndex(rarity, customMathRandom = Math.random) {
   return 0;
 }
 
-function generateEquipmentStats(rarity, baseStats, customMathRandom = Math.random) {
+function generateEquipmentStats(rarity, baseStats, elementName = '', customMathRandom = Math.random) {
   const tierIndex = rollTierIndex(rarity, customMathRandom);
   const multiplier = TIER_MULTIPLIERS[tierIndex];
   const tierColor = TIER_COLORS[tierIndex];
   const tierName = TIER_NAMES[tierIndex];
+  const elemWeight = ELEMENT_WEIGHTS[elementName] || {};
 
   const boostCount = tierIndex >= 3 ? 5 : 3;
   const shuffledKeys = [...STAT_KEYS].sort(() => 0.5 - customMathRandom());
@@ -560,23 +580,31 @@ function generateEquipmentStats(rarity, baseStats, customMathRandom = Math.rando
   for (const key of STAT_KEYS) {
     const rawValue = baseStats[key] || 0;
     const isBoosted = boostedKeys.includes(key);
+    const elemCoeff = elemWeight[key] || 1.0;
+
+    let finalVal = rawValue;
+    if (isBoosted) {
+      finalVal = rawValue * multiplier * elemCoeff;
+    } else {
+      finalVal = rawValue * elemCoeff;
+    }
 
     finalStats[key] = {
-      value: isBoosted ? Math.round(rawValue * multiplier * 100) / 100 : rawValue,
+      value: Math.round(finalVal * 100) / 100,
       isBoosted: isBoosted,
-      color: isBoosted ? tierColor : '#cbd5e1' 
+      color: isBoosted ? tierColor : '#cbd5e1'
     };
   }
 
   return { tierName, tierIndex, multiplier, stats: finalStats };
 }
 
-function generateCardStats(rarity, heroClass, randomness = 0.3, customMathRandom = Math.random) {
+function generateCardStats(rarity, heroClass, randomness = 0.8, customMathRandom = Math.random) {
   const config = RARITY_CONFIGS[rarity];
-  const classWeight = CLASS_WEIGHTS[heroClass];
+  const classWeight = CLASS_WEIGHTS[heroClass] || CLASS_WEIGHTS.WARRIOR;
   
-  const budgetVariance = config.variance || 0.1;
-  const floatFactor = 1 + (customMathRandom() * 2 - 1) * budgetVariance;
+  const variance = config.variance || 0.3;
+  const floatFactor = 1 + (customMathRandom() * 2 - 1) * variance; 
   const actualTotalBudget = Math.floor(config.baseBudget * floatFactor);
 
   let minRequiredBudget = 0;
@@ -587,40 +615,44 @@ function generateCardStats(rarity, heroClass, randomness = 0.3, customMathRandom
   }
 
   let remainingBudget = Math.max(0, actualTotalBudget - minRequiredBudget);
+
   const dynamicWeights = {};
   for (const key in classWeight) {
-    dynamicWeights[key] = classWeight[key] * (1 + (customMathRandom() * 2 - 1) * randomness);
+    const baseW = classWeight[key];
+    const randomJitter = Math.pow(customMathRandom() * 2.2, randomness * 1.5); 
+    dynamicWeights[key] = baseW * randomJitter;
   }
 
   const totalWeight = Object.values(dynamicWeights).reduce((sum, val) => sum + val, 0);
-  const finalStats = { ...config.minBounds };
+  const baseStats = { ...config.minBounds };
 
   for (const key of Object.keys(dynamicWeights)) {
     if (POINT_CONVERSION[key]) {
       const allocatedBudget = remainingBudget * (dynamicWeights[key] / totalWeight);
-      finalStats[key] = (finalStats[key] || 0) + (allocatedBudget / POINT_CONVERSION[key]);
+      baseStats[key] = (baseStats[key] || 0) + (allocatedBudget / POINT_CONVERSION[key]);
     }
   }
 
   return {
-    rarity, heroClass,
+    rarity, 
+    heroClass,
     stats: {
-      hp:       Math.round(finalStats.hp),
-      atk:      Math.round(finalStats.atk),
-      def:      Math.round(finalStats.def),
-      crit:     Number(finalStats.crit.toFixed(1)),
-      dodge:    Number(finalStats.dodge.toFixed(1)),
-      mpRec:    Number(finalStats.mpRec.toFixed(1)),
-      atkSpd:   Number(finalStats.atkSpd.toFixed(2)),
-      hitRate:  Number(finalStats.hitRate.toFixed(1)),
-      hpRec:    Number(finalStats.hpRec.toFixed(1)),
-      trueAtk:  Math.round(finalStats.trueAtk),
-      trueDef:  Math.round(finalStats.trueDef)
+      hp:       Math.round(baseStats.hp),
+      atk:      Math.round(baseStats.atk),
+      def:      Math.round(baseStats.def),
+      crit:     Number(baseStats.crit.toFixed(1)),
+      dodge:    Number(baseStats.dodge.toFixed(1)),
+      mpRec:    Number(baseStats.mpRec.toFixed(1)),
+      atkSpd:   Number(baseStats.atkSpd.toFixed(2)),
+      hitRate:  Number(baseStats.hitRate.toFixed(1)),
+      hpRec:    Number(baseStats.hpRec.toFixed(1)),
+      trueAtk:  Math.round(baseStats.trueAtk),
+      trueDef:  Math.round(baseStats.trueDef)
     }
   };
 }
 
-// --- 全局变量与状态声明 ---
+// 全局变量与状态声明
 let animFrameId = null;
 let lastFrameTime = 0;
 let battleLoopA = null, battleLoopB = null;
@@ -628,7 +660,6 @@ let isBattleRunning = false;
 let battleStats = {};
 let fighterA = null, fighterB = null;
 
-// PVE 难度关卡与玩家等级配置
 let pveProgress = JSON.parse(localStorage.getItem('barcode_pve_progress_v1') || '{"normal":1,"hard":1,"nightmare":1}');
 let currentDifficulty = 'normal';
 
@@ -693,9 +724,12 @@ let pokedexRecords = JSON.parse(localStorage.getItem('barcode_pokedex_records_v1
 let currentActiveCode = null;
 
 function getHash(str) {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) hash = (hash * 33) ^ str.charCodeAt(i);
-  return Math.abs(hash);
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
 }
 
 function switchTab(tabId) {
@@ -751,13 +785,15 @@ function getMonsterScaledStats(m, targetLevel = playerLevel) {
   const baseCrit = m.calculatedStats.crit.value;
   const baseDodge = m.calculatedStats.dodge ? m.calculatedStats.dodge.value : 5.0;
   const baseSkillDmg = m.calculatedStats.skillDmg.value;
-  const baseAtkSpeed = (m.calculatedStats.atkSpd && m.calculatedStats.atkSpd.value) ? m.calculatedStats.atkSpd.value : (m.atkSpeed || 1.5);
+  const baseAtkSpeed = (m.calculatedStats.atkSpd && m.calculatedStats.atkSpd.value) ? m.calculatedStats.atkSpd.value : (m.atkSpeed || 1.0);
   const growthAtkSpeed = m.growthAtkSpeed || 0.01;
   const baseHitRate = m.calculatedStats.hitRate ? m.calculatedStats.hitRate.value : 90;
   const baseHpRec   = m.calculatedStats.hpRec   ? m.calculatedStats.hpRec.value   : 5;
   const baseTrueAtk = m.calculatedStats.trueAtk ? m.calculatedStats.trueAtk.value : 0;
   const baseTrueDef = m.calculatedStats.trueDef ? m.calculatedStats.trueDef.value : 0;
-  const calculatedAtkSpeed = Math.max(0.3, parseFloat((baseAtkSpeed - growthAtkSpeed * (lvl - 1)).toFixed(2)));
+  
+  const calculatedAtkSpeed = parseFloat((baseAtkSpeed + growthAtkSpeed * (lvl - 1)).toFixed(2));
+  
   const hp = Math.floor(baseHp + m.growthHp * (lvl - 1));
   const mp = Math.floor(m.baseMp + m.growthMp * (lvl - 1));
   const atk = Math.floor(baseAtk + m.growthAtk * (lvl - 1));
@@ -783,24 +819,23 @@ function getMonsterScaledStats(m, targetLevel = playerLevel) {
   };
 }
 
+// 核心怪兽生成函数
 function generateMonster(barcode, customRarity = null) {
   const hash = getHash(barcode);
+  const pseudoRandom = mulberry32(hash);
+
   const rarity = customRarity || (
     hash % 100 < 5 ? 'UR' : 
     hash % 100 < 15 ? 'SSR' : 
     hash % 100 < 35 ? 'SR' : 
     hash % 100 < 65 ? 'R' : 'N'
   );
-  const heroClass = HERO_CLASSES[hash % HERO_CLASSES.length];
-  const elem = ELEMENTS[hash % ELEMENTS.length];
+  
+  const heroClass = HERO_CLASSES[Math.floor(pseudoRandom() * HERO_CLASSES.length)];
+  const elem = ELEMENTS[Math.floor(pseudoRandom() * ELEMENTS.length)];
 
-  let step = 0;
-  const pseudoRandom = () => {
-    step++;
-    return ((hash + step * 997) % 10000) / 10000;
-  };
-
-  const rawBaseGenerated = generateCardStats(rarity, heroClass, 0.3, pseudoRandom);
+  // 修复：生成基础卡片数值 (移除不匹配的形参，保障传参对齐)
+  const rawBaseGenerated = generateCardStats(rarity, heroClass, 0.8, pseudoRandom);
   const rawBaseSkillDmg = Math.round(rawBaseGenerated.stats.atk * 1.5);
 
   const rawBaseStats = {
@@ -818,32 +853,32 @@ function generateMonster(barcode, customRarity = null) {
     mpRec: rawBaseGenerated.stats.mpRec
   };
 
-  const tierResult = generateEquipmentStats(rarity, rawBaseStats, pseudoRandom);
+  const tierResult = generateEquipmentStats(rarity, rawBaseStats, elem.name, pseudoRandom);
 
-  const growthRanges = { N: [80, 110], R: [110, 150], SR: [150, 200], SSR: [200, 250], UR: [250, 320] };
+  const growthRanges = { N: [60, 130], R: [100, 180], SR: [140, 240], SSR: [190, 310], UR: [240, 420] };
   const [gMin, gMax] = growthRanges[rarity];
   const gSpan = gMax - gMin + 1;
 
   const growthHp = Math.floor(gMin + pseudoRandom() * gSpan);
-  const growthMp = Math.floor(10 + pseudoRandom() * 15);
-  const growthAtk = Math.floor(12 + pseudoRandom() * 50);
-  const growthDef = Math.floor(6 + pseudoRandom() * 50);
-  const growthCrit = parseFloat((0.1 + pseudoRandom() * 0.4).toFixed(2));
-  const growthDodge = parseFloat((0.1 + pseudoRandom() * 0.5).toFixed(2));
+  const growthMp = Math.floor(8 + pseudoRandom() * 20);
+  const growthAtk = Math.floor(10 + pseudoRandom() * 60);
+  const growthDef = Math.floor(5 + pseudoRandom() * 55);
+  const growthCrit = parseFloat((0.1 + pseudoRandom() * 0.6).toFixed(2));
+  const growthDodge = parseFloat((0.1 + pseudoRandom() * 0.6).toFixed(2));
 
-  const growthHitRate = parseFloat((0.1 + pseudoRandom() * 0.3).toFixed(2));
-  const growthHpRec   = parseFloat((0.2 + pseudoRandom() * 0.8).toFixed(2));
-  const growthTrueAtk = parseFloat((1.0 + pseudoRandom() * 2.0).toFixed(2));
-  const growthTrueDef = parseFloat((0.5 + pseudoRandom() * 1.5).toFixed(2));
+  const growthHitRate = parseFloat((0.1 + pseudoRandom() * 0.4).toFixed(2));
+  const growthHpRec   = parseFloat((0.2 + pseudoRandom() * 1.2).toFixed(2));
+  const growthTrueAtk = parseFloat((0.8 + pseudoRandom() * 2.5).toFixed(2));
+  const growthTrueDef = parseFloat((0.4 + pseudoRandom() * 2.0).toFixed(2));
 
   const baseMp = Math.floor(pseudoRandom() * 60) + 40;
-  const baseSkillMult = parseFloat((1.5 + pseudoRandom() * 5).toFixed(2));
+  const baseSkillMult = parseFloat((1.2 + pseudoRandom() * 5.5).toFixed(2));
   const skillGrowthMap = { N: 0.05, R: 0.08, SR: 0.12, SSR: 0.15, UR: 0.20 };
   const skillMultGrowth = skillGrowthMap[rarity];
 
-  const speedCfg = { base: tierResult.stats.atkSpd ? tierResult.stats.atkSpd.value : 1.5 };
+  const speedCfg = { base: tierResult.stats.atkSpd ? tierResult.stats.atkSpd.value : 1.0 };
   const atkSpeed = speedCfg.base;
-  const growthAtkSpeed = parseFloat((0.01 + pseudoRandom() * 0.015).toFixed(3));
+  const growthAtkSpeed = parseFloat((0.008 + pseudoRandom() * 0.02).toFixed(3));
   const effectChance = STATUS_EFFECT_PROBABILITY[rarity];
   const hasStatusEffect = pseudoRandom() < effectChance;
   const finalStatusType = hasStatusEffect ? elem.status : 'none';
@@ -851,23 +886,23 @@ function generateMonster(barcode, customRarity = null) {
   return {
     barcode,
     heroClass,
-    name: `${elem.prefixes[hash % elem.prefixes.length]}${SUFFIXES[hash % SUFFIXES.length]}`,
+    name: `${elem.prefixes[Math.floor(pseudoRandom() * elem.prefixes.length)]}${SUFFIXES[Math.floor(pseudoRandom() * SUFFIXES.length)]}`,
     rarity,
     tierName: tierResult.tierName,
     tierIndex: tierResult.tierIndex,
     multiplier: tierResult.multiplier,
     calculatedStats: tierResult.stats,
     element: elem.name,
-    emoji: `${EMOJI_BASES[hash % EMOJI_BASES.length]}${elem.emoji}`,
+    emoji: `${EMOJI_BASES[Math.floor(pseudoRandom() * EMOJI_BASES.length)]}${elem.emoji}`,
     baseMp, 
     growthHp, growthMp, growthAtk, growthDef, growthCrit, growthDodge,
     growthHitRate, growthHpRec, growthTrueAtk, growthTrueDef,
     baseSkillMult, skillMultGrowth,
     atkSpeed,
     growthAtkSpeed,
-    mpRegen: Math.floor(pseudoRandom() * 10) + 8,
+    mpRegen: Math.floor(pseudoRandom() * 12) + 6,
     skillDetail: {
-      name: elem.skills[hash % elem.skills.length],
+      name: elem.skills[Math.floor(pseudoRandom() * elem.skills.length)],
       mpCost: Math.floor(pseudoRandom() * 30) + 25,
       statusType: finalStatusType,
       effectDesc: STATUS_DESCRIPTIONS[finalStatusType]
@@ -909,7 +944,7 @@ function createBattleFighter(rawMonster, side, level) {
 }
 
 function applySkillEffect(attacker, defender) {
-  if (defender.statusEffect && defender.statusEffect.duration > 0) {
+  if (defender.statusEffect && (defender.statusEffect.duration > 0 || defender.statusEffect.expireTime > Date.now())) {
     spawnFloatNum(defender.side, "Debuff生效中(免疫)", "num-miss");
     addLog(`🛡️ [${defender.name}] 身上已有Debuff，免疫了新的异常效果！`, 'log-status');
     return;
@@ -918,13 +953,21 @@ function applySkillEffect(attacker, defender) {
   if (attacker.skillDetail.statusType !== 'none') {
     const chance = STATUS_EFFECT_PROBABILITY[attacker.rarity] || 0.10;
     if (Math.random() < chance) {
-      defender.statusEffect = {
-        type: attacker.skillDetail.statusType,
-        duration: 2 
-      };
+      if (attacker.skillDetail.statusType === 'freeze') {
+        defender.statusEffect = {
+          type: 'freeze',
+          duration: 1, // 补全 duration，确保 UI 能正常识别并显示图标
+          expireTime: Date.now() + 2000 // 持续 2 秒
+        };
+      } else {
+        defender.statusEffect = {
+          type: attacker.skillDetail.statusType,
+          duration: 2 
+        };
+      }
 
       if (attacker.skillDetail.statusType === 'slow') {
-        defender.effectiveAtkSpeed = defender.atkSpeed + 1.2;
+        defender.effectiveAtkSpeed = parseFloat((defender.atkSpeed * 0.7).toFixed(2));
       }
 
       const statusNames = { burn: "🔥 灼烧", freeze: "❄️ 冰冻", slow: "🐢 减速" };
@@ -935,8 +978,21 @@ function applySkillEffect(attacker, defender) {
 }
 
 function processStatusEffects(monster) {
-  if (!monster.statusEffect || monster.statusEffect.duration <= 0) return true;
+  if (!monster.statusEffect) return true;
 
+  // 处理基于时间的冰冻效果
+  if (monster.statusEffect.type === 'freeze') {
+    if (Date.now() >= monster.statusEffect.expireTime) {
+      monster.statusEffect = null;
+      spawnFloatNum(monster.side, "冰冻解除", "num-status");
+      addLog(`✨ [${monster.name}] 的冰冻状态已解除！`, 'log-status');
+    }
+    return true;
+  }
+
+  // 处理其他持续回合的状态（灼烧、减速等）
+  if (monster.statusEffect.duration <= 0) return true;
+  
   if (monster.statusEffect.type === 'burn') {
     const dotDamage = Math.max(5, Math.floor(monster.maxHp * 0.05));
     monster.currentHp = Math.max(0, monster.currentHp - dotDamage);
@@ -959,7 +1015,8 @@ function processStatusEffects(monster) {
 }
 
 function generatePveEnemyMonster(level, diff = currentDifficulty) {
-  const isBoss = (level % 10 === 0);
+  const curStage = pveProgress[diff] || 1;
+  const isBoss = (curStage % 10 === 0);
   const fakeCode = `PVE_BOSS_LV${level}_${Math.floor(Math.random() * 8999 + 1000)}`;
   let targetRarity = null;
 
@@ -1031,7 +1088,7 @@ function renderMonsterCard(m) {
       <div class="stat-box"><span>💖 回血</span><strong class="stat-val" style="color: ${m.calculatedStats.hpRec?.color || '#cbd5e1'}">${scaled.hpRec}/s</strong></div>
       <div class="stat-box"><span>🗡️ 真伤</span><strong class="stat-val" style="color: ${m.calculatedStats.trueAtk?.color || '#cbd5e1'}">${scaled.trueAtk}</strong></div>
       <div class="stat-box"><span>🛡️ 真防</span><strong class="stat-val" style="color: ${m.calculatedStats.trueDef?.color || '#cbd5e1'}">${scaled.trueDef}</strong></div>
-      <div class="stat-box"><span>⚡ 攻速</span><strong class="stat-val" style="color: ${m.calculatedStats.atkSpd?.color || '#cbd5e1'}">${scaled.atkSpeed}s/次</strong></div>
+      <div class="stat-box"><span>⚡ 攻速</span><strong class="stat-val" style="color: ${m.calculatedStats.atkSpd?.color || '#cbd5e1'}">${scaled.atkSpeed}次/秒</strong></div>
       <div class="stat-box"><span>🌊 回蓝</span><strong class="stat-val" style="color: ${m.calculatedStats.mpRec?.color || '#cbd5e1'}">${m.mpRegen}/s</strong></div>
     </div>
     <div class="skill-card">
@@ -1066,18 +1123,16 @@ function updateDeckUI() {
   const diffCfg = DIFFICULTY_CONFIGS[currentDifficulty];
 
   document.getElementById('pveStageNum').innerText = `${curStage} (${diffCfg.name})`;
-  document.getElementById('pveBossInfo').innerText = `敌人怪兽等级: Lv.${enemyLvl} (${enemyLvl % 10 === 0 ? 'BOSS关卡' : '普通关卡'})`;
+  document.getElementById('pveBossInfo').innerText = `敌人怪兽等级: Lv.${enemyLvl} (${curStage % 10 === 0 ? 'BOSS关卡' : '普通关卡'})`;
   document.getElementById('pveRewardInfo').innerText = `通关成功奖励：本难度进度 +1 ｜ 玩家等级 +${diffCfg.lvlAdd}`;
 
   const grid = document.getElementById('monsterGrid');
   let keys = Object.keys(myDeck);
 
-  // 1. 获取筛选与排序条件
   const filterRarity = document.getElementById('deckFilterRarity') ? document.getElementById('deckFilterRarity').value : 'ALL';
   const filterElement = document.getElementById('deckFilterElement') ? document.getElementById('deckFilterElement').value : 'ALL';
   const sortBy = document.getElementById('deckSortBy') ? document.getElementById('deckSortBy').value : 'time_desc';
 
-  // 2. 执行筛选 (Filter)
   keys = keys.filter(code => {
     const m = myDeck[code];
     if (filterRarity !== 'ALL' && m.rarity !== filterRarity) return false;
@@ -1085,10 +1140,8 @@ function updateDeckUI() {
     return true;
   });
 
-  // 稀有度权重表（用于排序）
   const rarityWeights = { 'UR': 5, 'SSR': 4, 'SR': 3, 'R': 2, 'N': 1 };
 
-  // 3. 执行排序 (Sort)
   keys.sort((a, b) => {
     const mA = myDeck[a];
     const mB = myDeck[b];
@@ -1097,7 +1150,7 @@ function updateDeckUI() {
 
     switch (sortBy) {
       case 'time_asc':
-        return 0; // 原始 key 顺序（最早）
+        return 0;
       case 'rarity_desc':
         return rarityWeights[mB.rarity] - rarityWeights[mA.rarity];
       case 'rarity_asc':
@@ -1106,13 +1159,14 @@ function updateDeckUI() {
         return scaledB.atk - scaledA.atk;
       case 'hp_desc':
         return scaledB.hp - scaledA.hp;
+      case 'spd_desc':
+        return scaledB.atkSpeed - scaledA.atkSpeed;
       case 'time_desc':
       default:
-        return -1; // 默认倒序（最新）
+        return -1;
     }
   });
 
-  // 4. 更新数量显示与渲染卡片列表
   document.getElementById('monsterCount').innerText = `${keys.length} / ${Object.keys(myDeck).length}`;
   grid.innerHTML = '';
 
@@ -1139,16 +1193,12 @@ function updateDeckUI() {
   });
 
   populateSelectOptions();
-  renderPokedex();
 }
 
 function populateSelectOptions() {
   const keys = Object.keys(myDeck);
-
-  // 稀有度权重表（高到低）
   const rarityWeights = { 'UR': 5, 'SSR': 4, 'SR': 3, 'R': 2, 'N': 1 };
 
-  // 按稀有度从高到低排序
   keys.sort((a, b) => {
     const weightA = rarityWeights[myDeck[a].rarity] || 0;
     const weightB = rarityWeights[myDeck[b].rarity] || 0;
@@ -1211,7 +1261,6 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// 渲染对战卡片中的数值细节（已修正攻速的正确缩放显示）
 function updateFighterDetailsDisplay(rawMonster, side, level) {
   const scaled = getMonsterScaledStats(rawMonster, level);
   
@@ -1226,7 +1275,7 @@ function updateFighterDetailsDisplay(rawMonster, side, level) {
       <div class="fighter-stat-item"><span>💖 回血</span><strong style="color:${rawMonster.calculatedStats?.hpRec?.color || '#fff'}">${scaled.hpRec}/s</strong></div>
       <div class="fighter-stat-item"><span>🗡️ 真伤</span><strong style="color:${rawMonster.calculatedStats?.trueAtk?.color || '#fff'}">${scaled.trueAtk}</strong></div>
       <div class="fighter-stat-item"><span>🛡️ 真防</span><strong style="color:${rawMonster.calculatedStats?.trueDef?.color || '#fff'}">${scaled.trueDef}</strong></div>
-      <div class="fighter-stat-item"><span>⚡ 攻速</span><strong style="color:${rawMonster.calculatedStats?.atkSpd?.color || '#fff'}">${scaled.atkSpeed}s</strong></div>
+      <div class="fighter-stat-item"><span>⚡ 攻速</span><strong style="color:${rawMonster.calculatedStats?.atkSpd?.color || '#fff'}">${scaled.atkSpeed}次/秒</strong></div>
       <div class="fighter-stat-item"><span>🌊 回蓝</span><strong style="color:${rawMonster.calculatedStats?.mpRec?.color || '#fff'}">${rawMonster.mpRegen}/s</strong></div>
     `;
   }
@@ -1334,12 +1383,12 @@ function startRealtimeBattle(mode = 'pvp') {
   battleLoopA = setInterval(() => {
     if (!isBattleRunning) return;
     executeTurn(fighterA, fighterB);
-  }, fighterA.effectiveAtkSpeed * 1000);
+  }, (1 / Math.max(0.1, fighterA.effectiveAtkSpeed)) * 1000);
 
   battleLoopB = setInterval(() => {
     if (!isBattleRunning) return;
     executeTurn(fighterB, fighterA);
-  }, fighterB.effectiveAtkSpeed * 1000);
+  }, (1 / Math.max(0.1, fighterB.effectiveAtkSpeed)) * 1000);
 
   animFrameId = requestAnimationFrame(gameLoop);
 }
@@ -1379,12 +1428,18 @@ function executeTurn(attacker, defender) {
     return;
   }
 
-  if (attacker.statusEffect && attacker.statusEffect.type === 'freeze') {
-    spawnFloatNum(attacker.side, "❄️ 冻结中!", "num-miss");
-    addLog(`❄️ [${attacker.name}] 被冰冻无法行动！`, 'log-status');
-    battleStats[attacker.side].ccTime += attacker.effectiveAtkSpeed;
-    return;
-  }
+    if (attacker.statusEffect && attacker.statusEffect.type === 'freeze') {
+      if (Date.now() < attacker.statusEffect.expireTime) {
+        // 只有距离上次打印超过 0.8 秒才打印，防止刷屏
+        if (!attacker.lastFreezeLogTime || Date.now() - attacker.lastFreezeLogTime > 800) {
+          spawnFloatNum(attacker.side, "❄️ 冰冻中", "num-miss");
+          addLog(`❄️ [${attacker.name}] 处于冰冻状态，无法行动！`, 'log-status');
+          attacker.lastFreezeLogTime = Date.now();
+        }
+        battleStats[attacker.side].ccTime += 0.2;
+        return;
+      }
+    }
 
   const avatarEl = document.getElementById(`avatar${attacker.side}`);
   avatarEl.classList.remove('anim-lunge-A', 'anim-lunge-B');
@@ -1506,8 +1561,15 @@ function updateFighterUI(f) {
   if (statusRow) {
     statusRow.innerHTML = '';
     if (f.statusEffect && f.statusEffect.duration > 0) {
-      const badges = { burn: "🔥 灼烧", freeze: "❄️ 冰冻", slow: "🐢 减速" };
-      statusRow.innerHTML = `<span class="status-badge status-${f.statusEffect.type}">${badges[f.statusEffect.type]} (${f.statusEffect.duration}回合)</span>`;
+      const badges = { burn: "🔥 灼烧", freeze: "❄️ 冰冻(暂停)", slow: "🐢 减速" };
+      let statusText = "";
+      if (f.statusEffect.type === 'freeze') {
+        const remainSec = Math.max(0, ((f.statusEffect.expireTime - Date.now()) / 1000)).toFixed(1);
+        statusText = `${badges.freeze} (${remainSec}s)`;
+      } else {
+        statusText = `${badges[f.statusEffect.type]} (${f.statusEffect.duration}回合)`;
+      }
+      statusRow.innerHTML = `<span class="status-badge status-${f.statusEffect.type}">${statusText}</span>`;
     }
   }
 }
@@ -1606,14 +1668,10 @@ function showAnalyticsModal(winner, loser) {
   let bestSkillA = false, bestSkillB = false;
   if (parseFloat(skillDpsA) > parseFloat(skillDpsB)) bestSkillA = true;
   else if (parseFloat(skillDpsB) > parseFloat(skillDpsA)) bestSkillB = true;
-  else if (skillCountA > skillCountB) bestSkillA = true;
-  else if (skillCountB > skillCountA) bestSkillB = true;
 
   let bestAttackA = false, bestAttackB = false;
   if (parseFloat(attackDpsA) > parseFloat(attackDpsB)) bestAttackA = true;
   else if (parseFloat(attackDpsB) > parseFloat(attackDpsA)) bestAttackB = true;
-  else if (attackCountA > attackCountB) bestAttackA = true;
-  else if (attackCountB > attackCountA) bestAttackB = true;
 
   const bestHitA = parseFloat(hitRateA) > parseFloat(hitRateB);
   const bestHitB = parseFloat(hitRateB) > parseFloat(hitRateA);
@@ -1739,70 +1797,64 @@ function renderPokedex() {
 
   EMOJI_BASES.forEach(race => {
     ELEMENTS.forEach(elemObj => {
-      const elem = elemObj.name;
-      rarities.forEach(rarity => {
+      rarities.forEach(r => {
         totalCombos++;
-        const comboKey = `${race}_${elem}_${rarity}`;
-        const record = pokedexRecords[comboKey];
+        const key = `${race}_${elemObj.name}_${r}`;
+        const record = pokedexRecords[key];
         const isUnlocked = !!record;
 
         if (isUnlocked) unlockedCount++;
 
+        // 条件过滤
         if (statusFilter === 'UNLOCKED' && !isUnlocked) return;
         if (statusFilter === 'LOCKED' && isUnlocked) return;
-        if (rarityFilter !== 'ALL' && rarityFilter !== rarity) return;
-        if (elemFilter !== 'ALL' && elemFilter !== elem) return;
+        if (rarityFilter !== 'ALL' && rarityFilter !== r) return;
+        if (elemFilter !== 'ALL' && elemFilter !== elemObj.name) return;
         if (raceFilter !== 'ALL' && raceFilter !== race) return;
 
-        const card = document.createElement('div');
-        card.className = `pokedex-item ${isUnlocked ? 'unlocked' : ''}`;
-        card.style.cssText = `
-          background: ${isUnlocked ? '#1e293b' : 'rgba(15, 23, 42, 0.6)'};
-          border: 1px solid ${isUnlocked ? 'var(--accent-color)' : '#334155'};
-          opacity: ${isUnlocked ? '1' : '0.45'};
-          border-radius: 12px;
-          padding: 10px;
-          text-align: center;
-          position: relative;
-        `;
-
+        const item = document.createElement('div');
+        item.className = `pokedex-item ${isUnlocked ? 'unlocked' : ''}`;
+        
         if (isUnlocked) {
-          card.innerHTML = `
-            <div style="position:absolute; top:5px; right:5px;"><span class="rarity-tag tag-${record.rarity}">${record.rarity}</span></div>
-            <div style="font-size:28px; margin-top:5px;">${record.raceEmoji}${elemObj.emoji}</div>
-            <div style="font-size:0.8rem; font-weight:bold; margin-top:4px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${record.firstMonsterName}</div>
-            <div style="font-size:0.7rem; color:var(--accent-color); margin-top:2px;">${record.element}</div>
-            <div style="font-size:0.65rem; color:#64748b; margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
-              <div>首获: ${record.unlockedAt}</div>
-              <div style="font-family:monospace; color:#94a3b8;">[${record.firstCode}]</div>
+          item.innerHTML = `
+            <div style="font-size: 26px;">${race}${elemObj.emoji}</div>
+            <div style="font-size: 0.78rem; font-weight: bold; margin: 4px 0;">${record.firstMonsterName}</div>
+            <div style="display:flex; justify-content:center; gap:4px; align-items:center;">
+              <span class="rarity-tag tag-${r}">${r}</span>
             </div>
+            <div style="font-size: 0.65rem; color: #94a3b8; margin-top: 4px;">${elemObj.name}</div>
           `;
         } else {
-          card.innerHTML = `
-            <div style="position:absolute; top:5px; right:5px;"><span class="rarity-tag tag-${rarity}">${rarity}</span></div>
-            <div style="font-size:28px; margin-top:5px; filter:grayscale(100%);">❓</div>
-            <div style="font-size:0.8rem; font-weight:bold; margin-top:4px; color:#64748b;">未解锁</div>
-            <div style="font-size:0.7rem; color:#475569; margin-top:2px;">${race} · ${elem}</div>
-            <div style="font-size:0.65rem; color:#475569; margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
-              等待扫描解锁
+          item.innerHTML = `
+            <div style="font-size: 26px; filter: grayscale(100%); opacity: 0.3;">❓</div>
+            <div style="font-size: 0.78rem; color: #64748b; margin: 4px 0;">未解锁</div>
+            <div style="display:flex; justify-content:center; gap:4px; align-items:center;">
+              <span class="rarity-tag tag-${r}" style="opacity: 0.5;">${r}</span>
             </div>
+            <div style="font-size: 0.65rem; color: #475569; margin-top: 4px;">${race}族 · ${elemObj.name}</div>
           `;
         }
-
-        grid.appendChild(card);
+        grid.appendChild(item);
       });
     });
   });
 
-  const pct = totalCombos > 0 ? ((unlockedCount / totalCombos) * 100).toFixed(1) : "0.0";
-  const progressEl = document.getElementById('pokedexProgressText');
-  if (progressEl) {
-    progressEl.innerText = `${unlockedCount} / ${totalCombos} (${pct}%)`;
+  const percent = totalCombos > 0 ? ((unlockedCount / totalCombos) * 100).toFixed(1) : "0.0";
+  const progressText = document.getElementById('pokedexProgressText');
+  if (progressText) {
+    progressText.innerText = `${unlockedCount} / ${totalCombos} (${percent}%)`;
   }
 }
 
+// 页面初始化加载
 window.addEventListener('DOMContentLoaded', () => {
   updateDeckUI();
+  
+  // 自动渲染第一只卡片或占位符
+  const firstCode = Object.keys(myDeck)[0];
+  if (firstCode) {
+    renderMonsterCard(myDeck[firstCode]);
+  }
 });
 </script>
 </body>
