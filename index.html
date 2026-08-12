@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Monster Deck - 终极对战与冒险引擎</title>
+  <!-- 引入 html2canvas 与 JsBarcode -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent-color: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      
+      /* 品质颜色定义 */
+      --tier-gray: #94a3b8;
+      --tier-blue: #38bdf8;
+      --tier-yellow: #facc15;
+      --tier-orange: #fb923c;
+      --tier-red: #ef4444;
+      --tier-purple: #c084fc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding: 25px 15px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+    .container { max-width: 1020px; width: 100%; }
+    
+    /* 头部玩家信息 */
+    header { text-align: center; margin-bottom: 20px; position: relative; }
+    header h1 { font-size: 2.2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+    .player-profile-bar { display: inline-flex; align-items: center; gap: 12px; background: #1e293b; padding: 6px 18px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 0.95rem; font-weight: bold; }
+    .p-lvl-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; }
+
+    /* 选项卡按钮 */
+    .tab-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid var(--border-color); padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
+    .tab-btn.active { background: var(--accent-color); color: #0f172a; border-color: var(--accent-color); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 输入与工作区 */
+    .input-section { background: var(--card-bg); padding: 18px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+    .input-group { display: flex; gap: 12px; align-items: center; }
+    .input-group input { flex: 1; background: #0f172a; border: 2px solid var(--border-color); padding: 12px 16px; border-radius: 10px; color: #fff; font-size: 1rem; outline: none; }
+    .input-group input:focus { border-color: var(--accent-color); }
+    
+    .workspace { display: grid; grid-template-columns: 1fr; gap: 25px; }
+    @media (min-width: 768px) { .workspace { grid-template-columns: 360px 1fr; } }
+    
+    /* 精致怪兽卡片 */
+    .monster-card { width: 100%; max-width: 350px; border-radius: 20px; padding: 18px; background: #1e293b; position: relative; border: 3px solid #475569; transition: all 0.3s; margin: 0 auto; }
+    .card-UR { border-color: #f59e0b; background: linear-gradient(145deg, #1e1b4b, #311042); box-shadow: 0 0 25px rgba(245, 158, 11, 0.35); }
+    .card-SSR { border-color: #ec4899; background: linear-gradient(145deg, #1e293b, #2e102d); box-shadow: 0 0 15px rgba(236, 72, 153, 0.25); }
+    .card-SR { border-color: #a855f7; }
+    .card-R { border-color: #3b82f6; }
+    .card-N { border-color: #64748b; }
+
+    .rarity-tag { font-weight: 900; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; }
+    .tag-UR { background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; }
+    .tag-SSR { background: #ec4899; color: #fff; }
+    .tag-SR { background: #a855f7; color: #fff; }
+    .tag-R { background: #3b82f6; color: #fff; }
+    .tag-N { background: #64748b; color: #fff; }
+
+    /* 成长资质勋章样式 */
+    .growth-badge { padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+
+    .avatar-box { background: rgba(0, 0, 0, 0.3); border-radius: 14px; height: 130px; display: flex; align-items: center; justify-content: center; font-size: 68px; position: relative; margin-bottom: 12px; }
+    .element-pill { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; }
+    .level-badge { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 10px; font-size: 0.8rem; color: #fbbf24; font-weight: bold; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .stat-box { background: rgba(255, 255, 255, 0.04); padding: 5px 8px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 0.78rem; align-items: center; }
+    .stat-val { font-weight: bold; }
+
+    .skill-card { background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 10px; border-left: 4px solid var(--accent-color); margin-bottom: 8px; }
+    .card-barcode-box { text-align: center; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 6px; margin-top: 8px; }
+    .card-barcode-box svg { max-width: 100%; height: 38px; }
+
+    .deck-area { background: var(--card-bg); border-radius: 16px; padding: 18px; border: 1px solid var(--border-color); }
+    .monster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+    .monster-thumb { background: #0f172a; border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; text-align: center; cursor: pointer; transition: transform 0.15s; }
+    .monster-thumb:hover { transform: translateY(-2px); }
+    .monster-thumb.active { border-color: var(--accent-color); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+    /* 对战舞台与战场样式 */
+    .battle-container { background: var(--card-bg); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color); }
+    .fighter-select-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 12px; align-items: center; margin-bottom: 18px; }
+    .select-box { background: #0f172a; border: 2px dashed var(--border-color); border-radius: 14px; padding: 12px; text-align: center; }
+    .select-box select { width: 100%; background: #1e293b; color: #fff; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 8px; font-size: 0.9rem; }
+    .vs-badge { font-size: 1.5rem; font-weight: 900; color: #ef4444; text-align: center; }
+
+    .battle-btn { width: 100%; background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1.05rem; cursor: pointer; margin-bottom: 18px; transition: opacity 0.2s; }
+    .battle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 擂台 stage & 漂浮伤害文字容器 */
+    .arena-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 18px; background: #090d16; border: 2px solid var(--border-color); border-radius: 16px; padding: 18px; position: relative; overflow: hidden; }
+    .monster-fighter { background: #1e293b; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; align-items: center; position: relative; border: 2px solid var(--border-color); }
+    .fighter-avatar { font-size: 58px; margin: 8px 0; position: relative; transition: transform 0.15s ease-out; }
+
+    /* 战斗对战面板细节卡片样式 */
+    .fighter-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .fighter-stat-item {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .fighter-skill-box {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid var(--accent-color);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      text-align: left;
+    }
+
+    /* 冲击/攻击动画 */
+    @keyframes lungeA { 0% { transform: translateX(0); } 40% { transform: translateX(50px) scale(1.1); } 100% { transform: translateX(0); } }
+    @keyframes lungeB { 0% { transform: translateX(0); } 40% { transform: translateX(-50px) scale(1.1); } 100% { transform: translateX(0); } }
+    .anim-lunge-A { animation: lungeA 0.35s ease-in-out; }
+    .anim-lunge-B { animation: lungeB 0.35s ease-in-out; }
+
+    /* 受击闪烁 */
+    @keyframes flashRedAnim { 0% { background-color: rgba(239, 68, 68, 0.8); transform: scale(0.98); } 100% { background-color: #1e293b; transform: scale(1); } }
+    .flash-red { animation: flashRedAnim 0.35s ease-out; }
+    @keyframes flashBlueAnim { 0% { box-shadow: 0 0 30px #38bdf8; } 100% { box-shadow: none; } }
+    .flash-blue { animation: flashBlueAnim 0.5s ease-out; }
+
+    /* 统一的血条与蓝条动画与外形逻辑 */
+    .bar-container { width: 100%; margin-top: 6px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px; }
+    .progress-bar-wrap { width: 100%; height: 10px; background: #0f172a; border-radius: 5px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+    
+    .hp-ghost { position: absolute; top:0; left:0; height:100%; background: #ef4444; width: 100%; transition: width 0.3s ease-out; opacity: 0.6; }
+    .hp-fill { position: absolute; top:0; left:0; height:100%; background: linear-gradient(90deg, #16a34a, #22c55e); width: 100%; transition: width 0.3s ease-out; }
+    .mp-fill { position: absolute; top:0; left:0; height:100%; background: linear-gradient(90deg, #0284c7, #38bdf8); width: 0%; transition: width 0.3s ease-out; }
+
+    /* 状态异常图标区 */
+    .status-effects-row { display: flex; gap: 4px; min-height: 22px; margin-top: 4px; }
+    .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; color: #fff; font-weight: bold; }
+    .status-burn { background: #ea580c; }
+    .status-freeze { background: #0284c7; }
+    .status-slow { background: #d97706; }
+
+    /* 浮动伤害数字 popup */
+    .floating-num-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+    .float-num { position: absolute; font-weight: 900; font-size: 1.3rem; animation: floatUp 0.85s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .num-normal { color: #ef4444; }
+    .num-crit { color: #facc15; font-size: 1.7rem; }
+    .num-skill { color: #c084fc; font-size: 1.5rem; }
+    .num-miss { color: #38bdf8; font-size: 1.2rem; }
+    .num-status { color: #fb923c; font-size: 1.1rem; }
+    .num-heal { color: #4ade80; font-size: 1.2rem; }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.8); }
+      30% { transform: translateY(-20px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-50px) scale(1); }
+    }
+
+    /* 日志 */
+    .battle-log-box { background: #090d16; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.5; }
+    .log-line { margin-bottom: 4px; }
+    .log-time { color: #64748b; font-size: 0.75rem; margin-right: 4px; }
+    .log-crit { color: #facc15; font-weight: bold; }
+    .log-skill { color: #c084fc; font-weight: bold; }
+    .log-miss { color: #38bdf8; }
+    .log-status { color: #fb923c; }
+
+    /* 结算弹窗 Modal */
+    .modal-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-card { background: #1e293b; border: 2px solid var(--border-color); border-radius: 20px; width: 90%; max-width: 520px; padding: 22px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+    .analytics-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.85rem; }
+    .analytics-table th, .analytics-table td { padding: 8px; text-align: center; border-bottom: 1px solid var(--border-color); }
+    .analytics-table th { color: var(--text-muted); font-weight: normal; }
+
+    /* PVE 闯关与图鉴 */
+    .pve-card { background: var(--card-bg); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color); text-align: center; }
+    .pokedex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
+    .pokedex-item { background: #0f172a; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; }
+    .pokedex-item.unlocked { border-color: var(--accent-color); }
+
+    /* 难度选择组件 */
+    .difficulty-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .diff-btn { flex: 1; max-width: 130px; background: #0f172a; color: #94a3b8; border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+    .diff-btn.active.diff-normal { background: #0284c7; color: #fff; border-color: #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,0.3); }
+    .diff-btn.active.diff-hard { background: #d97706; color: #fff; border-color: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.3); }
+    .diff-btn.active.diff-nightmare { background: #b91c1c; color: #fff; border-color: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.3); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>👾 Barcode Monster Deck</h1>
+      <div class="player-profile-bar">
+        <span>🎮 玩家状态</span>
+        <span class="p-lvl-badge" id="playerLvlBadge">Lv.1 冒险者</span>
+        <span style="color:#94a3b8; font-size:0.8rem;" id="backpackLvlInfo">背包怪兽等级: Lv.1</span>
+      </div>
+    </header>
+
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="switchTab('deck')">🎒 实验室与背包</button>
+      <button class="tab-btn" onclick="switchTab('battle')">⚔️ 实时模拟对战</button>
+      <button class="tab-btn" onclick="switchTab('pve')">🗡️ PVE 副本闯关</button>
+      <button class="tab-btn" onclick="switchTab('pokedex')">📖 图鉴与收集度</button>
+    </div>
+
+    <!-- TAB 1: 背包与实验室 -->
+    <div id="deckTab" class="tab-content active">
+      <div class="input-section">
+        <div class="input-group">
+          <input type="text" id="barcodeInput" placeholder="等待条形码扫描..." autofocus autocomplete="off">
+          <span style="font-size: 0.85rem; padding: 4px 10px; border-radius: 20px; background: #334155; color: #cbd5e1;">监听中</span>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <div class="card-preview-area">
+          <div id="cardWrapper" style="display: none;">
+            <div id="monsterCard" class="monster-card"></div>
+            <button style="margin-top:12px; width:100%; padding:10px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="exportCardImage()">📸 下载怪兽高清卡片</button>
+          </div>
+          <div id="cardPlaceholder" style="color: var(--text-muted); text-align: center; padding: 60px 0;">扫码召唤你的第一只怪兽！</div>
+        </div>
+
+        <div class="deck-area">
+          <h3>🎒 我的怪兽背包 (<span id="monsterCount">0</span>)</h3>
+          <div id="monsterGrid" class="monster-grid" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PVP 模拟对战 -->
+    <div id="battleTab" class="tab-content">
+      <div class="battle-container">
+        <div class="fighter-select-grid">
+          <div class="select-box">
+            <h4>🔴 选手 A (左)</h4>
+            <select id="selectA" onchange="previewFighter('A')"></select>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div class="select-box">
+            <h4>🔵 选手 B (右)</h4>
+            <select id="selectB" onchange="previewFighter('B')"></select>
+          </div>
+        </div>
+
+        <!-- 擂台主舞台 -->
+        <div class="arena-stage" id="arenaStage">
+          <div class="floating-num-container" id="floatContainer"></div>
+          
+          <!-- 左侧 A -->
+          <div class="monster-fighter" id="fighterCardA">
+            <div style="font-weight: bold; font-size: 1rem;" id="nameA">--</div>
+            <div id="badgeA" style="margin-top:2px;"></div>
+            <div class="fighter-avatar" id="avatarA">❓</div>
+            <div class="status-effects-row" id="statusA"></div>
+            
+            <div class="bar-container">
+              <div class="bar-label"><span>❤️ HP</span><span id="hpTextA">0/0</span></div>
+              <div class="progress-bar-wrap">
+                <div class="hp-ghost" id="hpGhostA"></div>
+                <div class="hp-fill" id="hpBarA"></div>
+              </div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-label"><span>💧 MP</span><span id="mpTextA">0/0</span></div>
+              <div class="progress-bar-wrap"><div class="mp-fill" id="mpBarA"></div></div>
+            </div>
+
+            <!-- 我方怪兽数值细节网格 -->
+            <div class="fighter-stats-grid" id="statsA"></div>
+            <!-- 我方怪兽技能细节面板 -->
+            <div class="fighter-skill-box" id="skillA"></div>
+          </div>
+
+          <!-- 右侧 B -->
+          <div class="monster-fighter" id="fighterCardB">
+            <div style="font-weight: bold; font-size: 1rem;" id="nameB">--</div>
+            <div id="badgeB" style="margin-top:2px;"></div>
+            <div class="fighter-avatar" id="avatarB">❓</div>
+            <div class="status-effects-row" id="statusB"></div>
+            
+            <div class="bar-container">
+              <div class="bar-label"><span>❤️ HP</span><span id="hpTextB">0/0</span></div>
+              <div class="progress-bar-wrap">
+                <div class="hp-ghost" id="hpGhostB"></div>
+                <div class="hp-fill" id="hpBarB"></div>
+              </div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-label"><span>💧 MP</span><span id="mpTextB">0/0</span></div>
+              <div class="progress-bar-wrap"><div class="mp-fill" id="mpBarB"></div></div>
+            </div>
+
+            <!-- 敌方怪兽数值细节网格 -->
+            <div class="fighter-stats-grid" id="statsB"></div>
+            <!-- 敌方怪兽技能细节面板 -->
+            <div class="fighter-skill-box" id="skillB"></div>
+          </div>
+        </div>
+
+        <button class="battle-btn" id="startBattleBtn" onclick="startRealtimeBattle('pvp')">🔥 开始实时模拟对战！</button>
+        <div class="battle-log-box" id="battleLog"><div style="color:#64748b; text-align:center; padding-top:60px;">准备就绪，选择怪兽开启战斗。</div></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PVE 闯关模式 -->
+    <div id="pveTab" class="tab-content">
+      <div class="pve-card">
+        <h2 style="color:var(--accent-color); margin-bottom:10px;">🗡️ 冒险关卡挑战</h2>
+        <p style="color:var(--text-muted); margin-bottom:15px;">切换难度突破进度，提升玩家等级，全面强化所有背包怪兽！</p>
+        
+        <!-- PVE 难度选择面板 -->
+        <div class="difficulty-selector">
+          <button class="diff-btn diff-normal active" id="btnDiffNormal" onclick="selectDifficulty('normal')">🟢 普通</button>
+          <button class="diff-btn diff-hard" id="btnDiffHard" onclick="selectDifficulty('hard')">🟡 困难</button>
+          <button class="diff-btn diff-nightmare" id="btnDiffNightmare" onclick="selectDifficulty('nightmare')">🔴 噩梦</button>
+        </div>
+
+        <div style="background:#0f172a; padding:15px; border-radius:12px; border:1px solid var(--border-color); max-width:420px; margin:0 auto 20px auto;">
+          <div style="font-size:1.2rem; font-weight:bold;">当前难度进度: Stage <span id="pveStageNum">1</span></div>
+          <div style="margin-top:6px; font-size:0.95rem; color:#f8fafc;" id="pveBossInfo">关卡守护怪兽: Lv.1</div>
+          <div style="margin-top:8px; font-size:0.8rem; color:#94a3b8; border-top:1px dashed #334155; padding-top:6px;" id="pveRewardInfo">
+            通关奖励：玩家等级 +1
+          </div>
+        </div>
+
+        <div style="max-width:320px; margin: 0 auto;">
+          <label style="font-size:0.85rem; color:var(--text-muted);">选择我方出战怪兽：</label>
+          <select id="pveFighterSelect" style="width:100%; padding:10px; background:#1e293b; color:#fff; border-radius:8px; border:1px solid var(--border-color); margin: 8px 0 15px 0;"></select>
+          <button class="battle-btn" onclick="startPveBattle()">⚔️ 开启副本挑战</button>
+        </div>
+      </div>
+    </div>
+
+   <!-- TAB 4: 全量组合图鉴与过滤器 -->
+   <div id="pokedexTab" class="tab-content">
+     <div class="deck-area">
+       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+         <h3>📖 种族×元素×稀有度 组合图鉴</h3>
+         <div style="font-size:0.9rem; color:var(--text-muted);">
+           收集进度: <strong id="pokedexProgressText" style="color:var(--accent-color);">0 / 0 (0%)</strong>
+         </div>
+       </div>
+
+       <!-- 过滤器区域 -->
+       <div style="background:#0f172a; padding:12px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:15px; display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+         <div>
+           <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">解锁状态</label>
+           <select id="filterStatus" onchange="renderPokedex()" style="width:100%; padding:6px; background:#1e293b; color:#fff; border:1px solid var(--border-color); border-radius:6px; font-size:0.85rem;">
+             <option value="ALL">全部状态</option>
+             <option value="UNLOCKED">仅已解锁</option>
+             <option value="LOCKED">仅未解锁</option>
+           </select>
+         </div>
+         <div>
+           <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">稀有度</label>
+           <select id="filterRarity" onchange="renderPokedex()" style="width:100%; padding:6px; background:#1e293b; color:#fff; border:1px solid var(--border-color); border-radius:6px; font-size:0.85rem;">
+             <option value="ALL">全部稀有度</option>
+             <option value="UR">UR</option>
+             <option value="SSR">SSR</option>
+             <option value="SR">SR</option>
+             <option value="R">R</option>
+             <option value="N">N</option>
+           </select>
+         </div>
+         <div>
+           <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">元素属性</label>
+           <select id="filterElement" onchange="renderPokedex()" style="width:100%; padding:6px; background:#1e293b; color:#fff; border:1px solid var(--border-color); border-radius:6px; font-size:0.85rem;">
+             <option value="ALL">全部元素</option>
+             <option value="🔥 火系">🔥 火系</option>
+             <option value="💧 水系">💧 水系</option>
+             <option value="⚡ 雷系">⚡ 雷系</option>
+             <option value="🌿 草系">🌿 草系</option>
+             <option value="💀 暗系">💀 暗系</option>
+             <option value="✨ 圣系">✨ 圣系</option>
+             <option value="🌋 岩系">🌋 岩系</option>
+             <option value="🌪️ 气系">🌪️ 气系</option>
+           </select>
+         </div>
+         <div>
+           <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">种族</label>
+           <select id="filterRace" onchange="renderPokedex()" style="width:100%; padding:6px; background:#1e293b; color:#fff; border:1px solid var(--border-color); border-radius:6px; font-size:0.85rem;">
+             <option value="ALL">全部种族</option>
+           </select>
+         </div>
+       </div>
+
+       <!-- 图鉴网格展示区 -->
+       <div class="pokedex-grid" id="pokedexGrid"></div>
+     </div>
+   </div>
+  </div>
+
+  <!-- 对战结算 Modal -->
+  <div class="modal-overlay" id="analyticsModal">
+    <div class="modal-card">
+      <h2 style="text-align:center;" id="modalTitle">🏆 胜利者：--</h2>
+      <div style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:4px;" id="modalSubtitle">--</div>
+      <div id="levelUpNotice" style="display:none; margin-top:12px; background:linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.2)); border:1px solid #f59e0b; padding:10px; border-radius:10px; text-align:center;">
+       <div style="font-weight:bold; color:#facc15; font-size:1rem;">🎉 冒险等级提升！</div>
+       <div style="font-size:0.8rem; color:#cbd5e1; margin-top:3px;" id="levelUpNoticeDetail">升级至 Lv.X，全背包怪兽属性已全面强化！</div>
+      </div>
+      <table class="analytics-table">
+        <thead>
+          <tr>
+            <th>统计项目</th>
+            <th id="thFighterA">选手 A</th>
+            <th id="thFighterB">选手 B</th>
+          </tr>
+        </thead>
+        <tbody id="analyticsBody"></tbody>
+      </table>
+
+      <button style="width:100%; padding:10px; background:var(--accent-color); border:none; border-radius:10px; font-weight:bold; cursor:pointer; color:#0f172a;" onclick="closeModal()">确认并返回</button>
+    </div>
+  </div>
+
+<script>
+// --- 集成的属性计算核心模型配置 ---
+const RARITY_CONFIGS = {
+  N:   { baseBudget: 3000,  variance: 0.05, minBounds: { atk: 110, def: 20, hp: 1900, crit: 2,  dodge: 12.0, mpRec: 1.0, atkSpd: 0.80, hitRate: 13, hpRec: 30,  trueAtk: 30, trueDef: 20 } },
+  R:   { baseBudget: 4000,  variance: 0.08, minBounds: { atk: 140, def: 45, hp: 2500, crit: 5,  dodge: 16.0, mpRec: 1.5, atkSpd: 0.90, hitRate: 17, hpRec: 50,  trueAtk: 60, trueDef: 50 } },
+  SR:  { baseBudget: 5000, variance: 0.10, minBounds: { atk: 190, def: 70, hp: 2800, crit: 8,  dodge: 21.0, mpRec: 2.0, atkSpd: 1.00, hitRate: 22, hpRec: 80,  trueAtk: 90, trueDef: 80 } },
+  SSR: { baseBudget: 6000, variance: 0.12, minBounds: { atk: 250, def: 95, hp: 3500, crit: 12, dodge: 29.0, mpRec: 2.5, atkSpd: 1.10, hitRate: 30, hpRec: 120, trueAtk: 130, trueDef: 110 } },
+  UR:  { baseBudget: 7000, variance: 0.15, minBounds: { atk: 310, def: 120, hp: 5000, crit: 15, dodge: 35.0, mpRec: 3.5, atkSpd: 1.25, hitRate: 36,hpRec: 160, trueAtk: 170, trueDef: 150 } }
+};
+
+const CLASS_WEIGHTS = {
+  ASSASSIN: { atk: 4.5, def: 1.0, hp: 1.5, crit: 3.0, dodge: 4.0, mpRec: 1.0, atkSpd: 4.0, hitRate: 3.0, hpRec: 1.0, trueAtk: 2.5, trueDef: 0.5 },
+  TANK:     { atk: 1.0, def: 3.5, hp: 5.0, crit: 0.5, dodge: 0.5, mpRec: 0.5, atkSpd: 1.0, hitRate: 1.0, hpRec: 4.0, trueAtk: 0.5, trueDef: 3.5 },
+  WARRIOR:  { atk: 3.0, def: 2.5, hp: 3.5, crit: 1.0, dodge: 1.5, mpRec: 1.0, atkSpd: 2.0, hitRate: 2.0, hpRec: 2.5, trueAtk: 1.5, trueDef: 1.5 },
+  MAGE:     { atk: 4.0, def: 1.0, hp: 2.0, crit: 3.0, dodge: 1.5, mpRec: 4.5, atkSpd: 1.0, hitRate: 2.5, hpRec: 1.0, trueAtk: 2.0, trueDef: 0.5 },
+  DEMON:    { atk: 4.0, def: 0.5, hp: 3.5, crit: 2.0, dodge: 2.0, mpRec: 3.0, atkSpd: 2.5, hitRate: 4.0, hpRec: 3.5, trueAtk: 3.5, trueDef: 0.0 }
+};
+
+const POINT_CONVERSION = {
+  atk: 0.7, def: 1.5, hp: 3.5, crit: 0.2, dodge: 0.3, mpRec: 0.1, atkSpd: 0.01, hitRate: 0.3, hpRec: 1.5, trueAtk: 2.0, trueDef: 2.5
+};
+
+const HERO_CLASSES = ['ASSASSIN', 'TANK', 'WARRIOR', 'MAGE', 'DEMON'];
+
+const TIER_COLORS = ['#94a3b8', '#38bdf8', '#facc15', '#fb923c', '#ef4444', '#c084fc'];
+const TIER_NAMES = ['平庸', '优秀', '卓越', '史诗', '传说', '神话'];
+const TIER_MULTIPLIERS = [1.3, 1.6, 1.9, 2.3, 2.8, 3.5]; 
+
+const TIER_WEIGHTS_BY_RARITY = {
+  N:   [50, 30, 15,  5,  0,  0],
+  R:   [30, 40, 20,  8,  2,  0],
+  SR:  [10, 30, 35, 18,  5,  2],
+  SSR: [ 2, 10, 30, 35, 18,  5],
+  UR:  [ 0,  2, 10, 28, 40, 20]
+};
+
+const STAT_KEYS = ['hp', 'atk', 'def', 'dodge', 'crit', 'skillDmg', 'hitRate', 'hpRec', 'trueAtk', 'trueDef' , 'atkSpd' , 'mpRec'];
+
+function rollTierIndex(rarity, customMathRandom = Math.random) {
+  const weights = TIER_WEIGHTS_BY_RARITY[rarity] || TIER_WEIGHTS_BY_RARITY.N;
+  const totalWeight = weights.reduce((acc, val) => acc + val, 0);
+  let random = customMathRandom() * totalWeight;
+
+  for (let i = 0; i < weights.length; i++) {
+    if (random < weights[i]) return i;
+    random -= weights[i];
+  }
+  return 0;
+}
+
+function generateEquipmentStats(rarity, baseStats, customMathRandom = Math.random) {
+  const tierIndex = rollTierIndex(rarity, customMathRandom);
+  const multiplier = TIER_MULTIPLIERS[tierIndex];
+  const tierColor = TIER_COLORS[tierIndex];
+  const tierName = TIER_NAMES[tierIndex];
+
+  const boostCount = tierIndex >= 3 ? 5 : 3;
+  const shuffledKeys = [...STAT_KEYS].sort(() => 0.5 - customMathRandom());
+  const boostedKeys = shuffledKeys.slice(0, boostCount);
+  const finalStats = {};
+
+  for (const key of STAT_KEYS) {
+    const rawValue = baseStats[key] || 0;
+    const isBoosted = boostedKeys.includes(key);
+
+    finalStats[key] = {
+      value: isBoosted ? Math.round(rawValue * multiplier * 100) / 100 : rawValue,
+      isBoosted: isBoosted,
+      color: isBoosted ? tierColor : '#cbd5e1' 
+    };
+  }
+
+  return { tierName, tierIndex, multiplier, stats: finalStats };
+}
+
+function generateCardStats(rarity, heroClass, randomness = 0.3, customMathRandom = Math.random) {
+  const config = RARITY_CONFIGS[rarity];
+  const classWeight = CLASS_WEIGHTS[heroClass];
+  
+  const budgetVariance = config.variance || 0.1;
+  const floatFactor = 1 + (customMathRandom() * 2 - 1) * budgetVariance;
+  const actualTotalBudget = Math.floor(config.baseBudget * floatFactor);
+
+  let minRequiredBudget = 0;
+  for (const key in config.minBounds) {
+    if (POINT_CONVERSION[key] !== undefined) {
+      minRequiredBudget += config.minBounds[key] * POINT_CONVERSION[key];
+    }
+  }
+
+  let remainingBudget = Math.max(0, actualTotalBudget - minRequiredBudget);
+  const dynamicWeights = {};
+  for (const key in classWeight) {
+    dynamicWeights[key] = classWeight[key] * (1 + (customMathRandom() * 2 - 1) * randomness);
+  }
+
+  const totalWeight = Object.values(dynamicWeights).reduce((sum, val) => sum + val, 0);
+  const finalStats = { ...config.minBounds };
+
+  for (const key of Object.keys(dynamicWeights)) {
+    if (POINT_CONVERSION[key]) {
+      const allocatedBudget = remainingBudget * (dynamicWeights[key] / totalWeight);
+      finalStats[key] = (finalStats[key] || 0) + (allocatedBudget / POINT_CONVERSION[key]);
+    }
+  }
+
+  return {
+    rarity, heroClass,
+    stats: {
+      hp:       Math.round(finalStats.hp),
+      atk:      Math.round(finalStats.atk),
+      def:      Math.round(finalStats.def),
+      crit:     Number(finalStats.crit.toFixed(1)),
+      dodge:    Number(finalStats.dodge.toFixed(1)),
+      mpRec:    Number(finalStats.mpRec.toFixed(1)),
+      atkSpd:   Number(finalStats.atkSpd.toFixed(2)),
+      hitRate:  Number(finalStats.hitRate.toFixed(1)),
+      hpRec:    Number(finalStats.hpRec.toFixed(1)),
+      trueAtk:  Math.round(finalStats.trueAtk),
+      trueDef:  Math.round(finalStats.trueDef)
+    }
+  };
+}
+
+// --- 全局变量与状态声明 ---
+let animFrameId = null;
+let lastFrameTime = 0;
+let battleLoopA = null, battleLoopB = null;
+let isBattleRunning = false;
+let battleStats = {};
+let fighterA = null, fighterB = null;
+
+// PVE 难度关卡与玩家等级配置
+let pveProgress = JSON.parse(localStorage.getItem('barcode_pve_progress_v1') || '{"normal":1,"hard":1,"nightmare":1}');
+let currentDifficulty = 'normal';
+
+const DIFFICULTY_CONFIGS = {
+  normal:    { name: '普通', step: 1,  lvlAdd: 1, btnId: 'btnDiffNormal' },
+  hard:      { name: '困难', step: 5,  lvlAdd: 2, btnId: 'btnDiffHard' },
+  nightmare: { name: '噩梦', step: 20, lvlAdd: 5, btnId: 'btnDiffNightmare' }
+};
+
+function calculatePlayerLevel() {
+  const normalProg = pveProgress.normal || 1;
+  const hardProg = pveProgress.hard || 1;
+  const nightmareProg = pveProgress.nightmare || 1;
+  return 1 + (normalProg - 1) * 1 + (hardProg - 1) * 2 + (nightmareProg - 1) * 5;
+}
+
+let playerLevel = calculatePlayerLevel();
+
+const ELEMENT_ADVANTAGE = {
+  '🔥 火系': { '🌿 草系': 2.0, '💧 水系': 0.5, '🌋 岩系': 0.5 },
+  '💧 水系': { '🔥 火系': 2.0, '🌋 岩系': 2.0, '🌿 草系': 0.5, '⚡ 雷系': 0.5 },
+  '⚡ 雷系': { '💧 水系': 2.0, '🌪️ 气系': 2.0, '🌋 岩系': 0.5 },
+  '🌿 草系': { '💧 水系': 2.0, '🌋 岩系': 2.0, '🔥 火系': 0.5, '🌪️ 气系': 0.5 },
+  '💀 暗系': { '✨ 圣系': 2.0, '💀 暗系': 0.5 },
+  '✨ 圣系': { '💀 暗系': 2.0, '✨ 圣系': 0.5 },
+  '🌋 岩系': { '🔥 火系': 2.0, '⚡ 雷系': 2.0, '🌿 草系': 0.5, '💧 水系': 0.5 },
+  '🌪️ 气系': { '🌿 草系': 2.0, '⚡ 雷系': 0.5 }
+};
+
+const EMOJI_BASES = ['🐉','🐲','🦖','🦕','🦁','🐯','🐺','🦊','🐱','🐼','🦇','🦅','🐊','🐍','🐙','🦈','👾','🤖'];
+
+const STATUS_DESCRIPTIONS = {
+  burn: '🔥 附加灼烧效果 (持续造成伤害)',
+  freeze: '❄️ 附加冰冻效果 (使目标无法行动)',
+  slow: '🐢 附加减速效果 (降低目标攻击速度)',
+  none: '💥 无附加特效 (纯物理/能量伤害)'
+};
+
+const STATUS_EFFECT_PROBABILITY = {
+  'N': 0.10, 'R': 0.25, 'SR': 0.45, 'SSR': 0.65, 'UR': 0.80  
+};
+
+const ELEMENTS = [
+  { name: '🔥 火系', emoji: '🔥', prefixes: ['烈焰', '熔岩', '焚天', '红莲', '爆裂', '灼热', '炼狱', '业火', '灭世', '煌炎', '太阳', '炽热', '烬灭', '怒火', '焦土', '离火'], skills: ['地狱火弹', '红莲爆炎斩'], status: 'burn' },
+  { name: '💧 水系', emoji: '💧', prefixes: ['深海', '极寒', '怒涛', '霜华', '沧浪', '冰霜', '漩涡', '寒霜', '凛冬', '冰封', '碧波', '玄冰', '潜龙', '霜冻', '海皇', '冻土'], skills: ['狂暴海啸', '绝对零度冲击'], status: 'freeze' },
+  { name: '⚡ 雷系', emoji: '⚡', prefixes: ['狂雷', '霹雳', '紫电', '迅雷', '奔雷', '震天', '天劫', '极光', '雷霆', '电光', '惊雷', '闪电', '狂暴', '怒雷', '轰雷', '天雷'], skills: ['万丈雷霆击', '超电磁轰炸'], status: 'slow' },
+  { name: '🌿 草系', emoji: '🌿', prefixes: ['森之', '荆棘', '苍翠', '灵植', '荒野', '幻花', '古树', '万物', '自然', '幽谷', '神木', '狂暴', '生灵', '藤蔓', '绿洲', '青木'], skills: ['飞叶风暴', '毒藤绞杀缠'], status: 'burn' },
+  { name: '💀 暗系', emoji: '💀', prefixes: ['暗影', '虚空', '深渊', '噬魂', '幽冥', '邪能', '诅诅', '永夜', '死灵', '寂灭', '黑曜', '混沌', '恶魔', '影之', '魇魔', '终焉'], skills: ['黑洞崩塌', '灵魂剥离术'], status: 'freeze' },
+  { name: '✨ 圣系', emoji: '✨', prefixes: ['辉光', '晨曦', '圣洁', '天启', '耀光', '神圣', '不灭', '光辉', '救世', '秩序', '炽天', '正义', '幻光', '神恩', '天辉', '星耀'], skills: ['神圣审判光束', '创世辉光'], status: 'slow' },
+  { name: '🌋 岩系', emoji: '🌋', prefixes: ['撼地', '巨岩', '泰坦', '破碎', '不朽', '玄武', '山岳', '崩山', '晶石', '坚磐', '地脉', '钢岩', '裂地', '震地', '万钧', '重岩'], skills: ['陨石天降重击', '大地震颤裂'], status: 'slow' },
+  { name: '🌪️ 气系', emoji: '🌪️', prefixes: ['飓风', '暴风', '裂空', '疾风', '流云', '断空', '御风', '幻影', '狂风', '风暴', '啸天', '飞天', '追风', '风云', '无影', '苍穹'], skills: ['裂空暴风龙卷', '九天风暴弹'], status: 'slow' }
+];
+
+const SUFFIXES = [
+  '狂兽', '领主', '魔王', '游侠', '战皇', '龙尊', '大帝', '尊者', '使徒', '先锋', '主宰', '魔皇', '神王', '骑士', '法皇', '裁决者',
+  '剑圣', '武圣', '仙尊', '邪尊', '狂徒', '战神', '天尊', '妖皇', '巨龙', '泰坦', '巨兽', '幽灵', '恶魔', '死灵', '幻兽', '魔兽',
+  '游击手', '猎手', '终结者', '守卫', '先驱', '战将', '守护者', '征服者'
+];
+
+let myDeck = JSON.parse(localStorage.getItem('barcode_monsters_deck_v2') || '{}');
+let pokedexRecords = JSON.parse(localStorage.getItem('barcode_pokedex_records_v1') || '{}');
+let currentActiveCode = null;
+
+function getHash(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) hash = (hash * 33) ^ str.charCodeAt(i);
+  return Math.abs(hash);
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  
+  const btns = document.querySelectorAll('.tab-btn');
+  if (tabId === 'deck') btns[0].classList.add('active');
+  else if (tabId === 'battle') btns[1].classList.add('active');
+  else if (tabId === 'pve') btns[2].classList.add('active');
+  else if (tabId === 'pokedex') btns[3].classList.add('active');
+
+  const targetTab = document.getElementById(`${tabId}Tab`);
+  if (targetTab) targetTab.classList.add('active');
+
+  if (tabId === 'pokedex') renderPokedex();
+}
+
+function selectDifficulty(diff) {
+  currentDifficulty = diff;
+  document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(DIFFICULTY_CONFIGS[diff].btnId).classList.add('active');
+  updateDeckUI();
+}
+
+function getPveEnemyLevel(diff) {
+  const stage = pveProgress[diff] || 1;
+  const cfg = DIFFICULTY_CONFIGS[diff];
+  return 1 + (stage - 1) * cfg.step;
+}
+
+function exportCardImage() {
+  const cardElement = document.getElementById('monsterCard');
+  if (!cardElement) return;
+  
+  html2canvas(cardElement, { backgroundColor: null, scale: 2, useCORS: true }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `Monster_${currentActiveCode || 'card'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    console.error("图片导出失败:", err);
+    alert("导出卡片失败，请重试！");
+  });
+}
+
+function getMonsterScaledStats(m, targetLevel = playerLevel) {
+  const lvl = Math.max(1, targetLevel);
+
+  const baseHp = m.calculatedStats.hp.value;
+  const baseAtk = m.calculatedStats.atk.value;
+  const baseDef = m.calculatedStats.def.value;
+  const baseCrit = m.calculatedStats.crit.value;
+  const baseDodge = m.calculatedStats.dodge ? m.calculatedStats.dodge.value : 5.0;
+  const baseSkillDmg = m.calculatedStats.skillDmg.value;
+  const baseAtkSpeed = (m.calculatedStats.atkSpd && m.calculatedStats.atkSpd.value) ? m.calculatedStats.atkSpd.value : (m.atkSpeed || 1.5);
+  const growthAtkSpeed = m.growthAtkSpeed || 0.01;
+  const baseHitRate = m.calculatedStats.hitRate ? m.calculatedStats.hitRate.value : 90;
+  const baseHpRec   = m.calculatedStats.hpRec   ? m.calculatedStats.hpRec.value   : 5;
+  const baseTrueAtk = m.calculatedStats.trueAtk ? m.calculatedStats.trueAtk.value : 0;
+  const baseTrueDef = m.calculatedStats.trueDef ? m.calculatedStats.trueDef.value : 0;
+  const calculatedAtkSpeed = Math.max(0.3, parseFloat((baseAtkSpeed - growthAtkSpeed * (lvl - 1)).toFixed(2)));
+  const hp = Math.floor(baseHp + m.growthHp * (lvl - 1));
+  const mp = Math.floor(m.baseMp + m.growthMp * (lvl - 1));
+  const atk = Math.floor(baseAtk + m.growthAtk * (lvl - 1));
+  const def = Math.floor(baseDef + m.growthDef * (lvl - 1));
+  
+  const crit = parseFloat((baseCrit + m.growthCrit * (lvl - 1)).toFixed(1));
+  const dodge = parseFloat((baseDodge + (m.growthDodge || 0.2) * (lvl - 1)).toFixed(1));
+
+  const hitRate = parseFloat((baseHitRate + (m.growthHitRate || 0.2) * (lvl - 1)).toFixed(1));
+  const hpRec   = parseFloat((baseHpRec + (m.growthHpRec || 0.5) * (lvl - 1)).toFixed(1));
+  const trueAtk = Math.floor(baseTrueAtk + (m.growthTrueAtk || 1.5) * (lvl - 1));
+  const trueDef = Math.floor(baseTrueDef + (m.growthTrueDef || 1.0) * (lvl - 1));
+
+  const skillRank = Math.floor(lvl / 5);
+  const skillMultiplier = m.baseSkillMult + (skillRank * m.skillMultGrowth);
+  const skillDamage = Math.floor(baseSkillDmg + (atk * skillMultiplier));
+
+  return { 
+    lvl, hp, maxHp: hp, mp, maxMp: mp, atk, def, crit, dodge, 
+    hitRate, hpRec, trueAtk, trueDef,
+    atkSpeed: calculatedAtkSpeed, 
+    skillDamage, skillMultiplier 
+  };
+}
+
+function generateMonster(barcode, customRarity = null) {
+  const hash = getHash(barcode);
+  const rarity = customRarity || (
+    hash % 100 < 5 ? 'UR' : 
+    hash % 100 < 15 ? 'SSR' : 
+    hash % 100 < 35 ? 'SR' : 
+    hash % 100 < 65 ? 'R' : 'N'
+  );
+  const heroClass = HERO_CLASSES[hash % HERO_CLASSES.length];
+  const elem = ELEMENTS[hash % ELEMENTS.length];
+
+  let step = 0;
+  const pseudoRandom = () => {
+    step++;
+    return ((hash + step * 997) % 10000) / 10000;
+  };
+
+  const rawBaseGenerated = generateCardStats(rarity, heroClass, 0.3, pseudoRandom);
+  const rawBaseSkillDmg = Math.round(rawBaseGenerated.stats.atk * 1.5);
+
+  const rawBaseStats = {
+    hp: rawBaseGenerated.stats.hp,
+    atk: rawBaseGenerated.stats.atk,
+    def: rawBaseGenerated.stats.def,
+    crit: rawBaseGenerated.stats.crit,
+    dodge: rawBaseGenerated.stats.dodge,
+    skillDmg: rawBaseSkillDmg,
+    hitRate: rawBaseGenerated.stats.hitRate,
+    hpRec: rawBaseGenerated.stats.hpRec,
+    trueAtk: rawBaseGenerated.stats.trueAtk,
+    trueDef: rawBaseGenerated.stats.trueDef,
+    atkSpd: rawBaseGenerated.stats.atkSpd,
+    mpRec: rawBaseGenerated.stats.mpRec
+  };
+
+  const tierResult = generateEquipmentStats(rarity, rawBaseStats, pseudoRandom);
+
+  const growthRanges = { N: [80, 110], R: [110, 150], SR: [150, 200], SSR: [200, 250], UR: [250, 320] };
+  const [gMin, gMax] = growthRanges[rarity];
+  const gSpan = gMax - gMin + 1;
+
+  const growthHp = Math.floor(gMin + pseudoRandom() * gSpan);
+  const growthMp = Math.floor(10 + pseudoRandom() * 15);
+  const growthAtk = Math.floor(12 + pseudoRandom() * 50);
+  const growthDef = Math.floor(6 + pseudoRandom() * 50);
+  const growthCrit = parseFloat((0.1 + pseudoRandom() * 0.4).toFixed(2));
+  const growthDodge = parseFloat((0.1 + pseudoRandom() * 0.5).toFixed(2));
+
+  const growthHitRate = parseFloat((0.1 + pseudoRandom() * 0.3).toFixed(2));
+  const growthHpRec   = parseFloat((0.2 + pseudoRandom() * 0.8).toFixed(2));
+  const growthTrueAtk = parseFloat((1.0 + pseudoRandom() * 2.0).toFixed(2));
+  const growthTrueDef = parseFloat((0.5 + pseudoRandom() * 1.5).toFixed(2));
+
+  const baseMp = Math.floor(pseudoRandom() * 60) + 40;
+  const baseSkillMult = parseFloat((1.5 + pseudoRandom() * 5).toFixed(2));
+  const skillGrowthMap = { N: 0.05, R: 0.08, SR: 0.12, SSR: 0.15, UR: 0.20 };
+  const skillMultGrowth = skillGrowthMap[rarity];
+
+  const speedCfg = { base: tierResult.stats.atkSpd ? tierResult.stats.atkSpd.value : 1.5 };
+  const atkSpeed = speedCfg.base;
+  const growthAtkSpeed = parseFloat((0.01 + pseudoRandom() * 0.015).toFixed(3));
+  const effectChance = STATUS_EFFECT_PROBABILITY[rarity];
+  const hasStatusEffect = pseudoRandom() < effectChance;
+  const finalStatusType = hasStatusEffect ? elem.status : 'none';
+
+  return {
+    barcode,
+    heroClass,
+    name: `${elem.prefixes[hash % elem.prefixes.length]}${SUFFIXES[hash % SUFFIXES.length]}`,
+    rarity,
+    tierName: tierResult.tierName,
+    tierIndex: tierResult.tierIndex,
+    multiplier: tierResult.multiplier,
+    calculatedStats: tierResult.stats,
+    element: elem.name,
+    emoji: `${EMOJI_BASES[hash % EMOJI_BASES.length]}${elem.emoji}`,
+    baseMp, 
+    growthHp, growthMp, growthAtk, growthDef, growthCrit, growthDodge,
+    growthHitRate, growthHpRec, growthTrueAtk, growthTrueDef,
+    baseSkillMult, skillMultGrowth,
+    atkSpeed,
+    growthAtkSpeed,
+    mpRegen: Math.floor(pseudoRandom() * 10) + 8,
+    skillDetail: {
+      name: elem.skills[hash % elem.skills.length],
+      mpCost: Math.floor(pseudoRandom() * 30) + 25,
+      statusType: finalStatusType,
+      effectDesc: STATUS_DESCRIPTIONS[finalStatusType]
+    },
+    createdAt: new Date().toLocaleDateString()
+  };
+}
+
+function createBattleFighter(rawMonster, side, level) {
+  const scaled = getMonsterScaledStats(rawMonster, level);
+  
+  return {
+    side,
+    level: scaled.lvl,
+    rarity: rawMonster.rarity,
+    tierName: rawMonster.tierName,
+    name: rawMonster.name,
+    element: rawMonster.element,
+    emoji: rawMonster.emoji,
+    maxHp: scaled.hp, 
+    currentHp: scaled.hp,
+    maxMp: scaled.mp, 
+    currentMp: 0,
+    atk: scaled.atk,
+    def: scaled.def,
+    crit: scaled.crit,
+    dodge: scaled.dodge,
+    hitRate: scaled.hitRate,
+    hpRec: scaled.hpRec,
+    trueAtk: scaled.trueAtk,
+    trueDef: scaled.trueDef,
+    atkSpeed: scaled.atkSpeed,
+    effectiveAtkSpeed: scaled.atkSpeed,
+    mpRegen: rawMonster.mpRegen,
+    skillDetail: rawMonster.skillDetail,
+    skillDamage: scaled.skillDamage,
+    statusEffect: null 
+  };
+}
+
+function applySkillEffect(attacker, defender) {
+  if (defender.statusEffect && defender.statusEffect.duration > 0) {
+    spawnFloatNum(defender.side, "Debuff生效中(免疫)", "num-miss");
+    addLog(`🛡️ [${defender.name}] 身上已有Debuff，免疫了新的异常效果！`, 'log-status');
+    return;
+  }
+
+  if (attacker.skillDetail.statusType !== 'none') {
+    const chance = STATUS_EFFECT_PROBABILITY[attacker.rarity] || 0.10;
+    if (Math.random() < chance) {
+      defender.statusEffect = {
+        type: attacker.skillDetail.statusType,
+        duration: 2 
+      };
+
+      if (attacker.skillDetail.statusType === 'slow') {
+        defender.effectiveAtkSpeed = defender.atkSpeed + 1.2;
+      }
+
+      const statusNames = { burn: "🔥 灼烧", freeze: "❄️ 冰冻", slow: "🐢 减速" };
+      spawnFloatNum(defender.side, statusNames[defender.statusEffect.type], "num-status");
+      addLog(`✨ [${defender.name}] 被附加了 ${statusNames[defender.statusEffect.type]} 状态！`, 'log-status');
+    }
+  }
+}
+
+function processStatusEffects(monster) {
+  if (!monster.statusEffect || monster.statusEffect.duration <= 0) return true;
+
+  if (monster.statusEffect.type === 'burn') {
+    const dotDamage = Math.max(5, Math.floor(monster.maxHp * 0.05));
+    monster.currentHp = Math.max(0, monster.currentHp - dotDamage);
+    spawnFloatNum(monster.side, `🔥 -${dotDamage}`, "num-status");
+    addLog(`🔥 [${monster.name}] 受到灼烧伤害 -${dotDamage}`, 'log-status');
+  }
+
+  monster.statusEffect.duration -= 1;
+
+  if (monster.statusEffect.duration <= 0) {
+    if (monster.statusEffect.type === 'slow') {
+      monster.effectiveAtkSpeed = monster.atkSpeed; 
+    }
+    monster.statusEffect = null; 
+    spawnFloatNum(monster.side, "状态解除", "num-status");
+    addLog(`✨ [${monster.name}] 的异常状态已解除！`, 'log-status');
+  }
+
+  return true;
+}
+
+function generatePveEnemyMonster(level, diff = currentDifficulty) {
+  const isBoss = (level % 10 === 0);
+  const fakeCode = `PVE_BOSS_LV${level}_${Math.floor(Math.random() * 8999 + 1000)}`;
+  let targetRarity = null;
+
+  if (diff === 'nightmare') {
+    targetRarity = 'UR';
+  } else if (diff === 'hard') {
+    const hardPool = ['SR', 'SSR', 'UR'];
+    targetRarity = hardPool[Math.floor(Math.random() * hardPool.length)];
+  } else {
+    if (isBoss) {
+      targetRarity = (level % 20 === 0) ? 'UR' : 'SSR';
+    }
+  }
+
+  const m = generateMonster(fakeCode, targetRarity);
+
+  if (isBoss) {
+    m.name = `👑 [BOSS] ${m.name}`;
+  } else {
+    m.name = `⚔️ [守护者] ${m.name}`;
+  }
+  return m;
+}
+
+function renderBarcodeSvg(targetSvgId, barcodeText) {
+  try {
+    JsBarcode(`#${targetSvgId}`, barcodeText, {
+      format: "CODE128", width: 1.4, height: 35, displayValue: true, fontSize: 11, background: "transparent", lineColor: "#cbd5e1", textColor: "#cbd5e1"
+    });
+  } catch(e) { console.warn("JsBarcode error", e); }
+}
+
+function renderMonsterCard(m) {
+  if (!m.calculatedStats || !m.calculatedStats.dodge || !m.calculatedStats.atkSpd) {
+    m = generateMonster(m.barcode);
+    myDeck[m.barcode] = m;
+    localStorage.setItem('barcode_monsters_deck_v2', JSON.stringify(myDeck));
+  }
+
+  const scaled = getMonsterScaledStats(m, playerLevel);
+  const card = document.getElementById('monsterCard');
+  card.className = `monster-card card-${m.rarity}`;
+
+  const isEffectNone = m.skillDetail.statusType === 'none';
+  const effectColor = isEffectNone ? '#94a3b8' : '#f59e0b';
+  const tierColor = TIER_COLORS[m.tierIndex || 0];
+
+  card.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-size:1.2rem; font-weight:bold;">${m.name}</span>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span class="rarity-tag tag-${m.rarity}">${m.rarity}</span>
+        <span class="growth-badge" style="background-color: ${tierColor};">${m.tierName} (x${m.multiplier})</span>
+      </div>
+    </div>
+    <div class="avatar-box">
+      <span class="element-pill">${m.element} | ${m.heroClass || 'WARRIOR'}</span>
+      <div>${m.emoji}</div>
+      <span class="level-badge">Lv.${scaled.lvl}</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><span>❤️ 生命</span><strong class="stat-val" style="color: ${m.calculatedStats.hp.color}">${scaled.hp} <small>(+${m.growthHp})</small></strong></div>
+      <div class="stat-box"><span>💧 魔法</span><strong class="stat-val" style="color: #cbd5e1">${scaled.mp} <small>(+${m.growthMp})</small></strong></div>
+      <div class="stat-box"><span>⚔️ 攻击</span><strong class="stat-val" style="color: ${m.calculatedStats.atk.color}">${scaled.atk} <small>(+${m.growthAtk})</small></strong></div>
+      <div class="stat-box"><span>🛡️ 防御</span><strong class="stat-val" style="color: ${m.calculatedStats.def.color}">${scaled.def} <small>(+${m.growthDef})</small></strong></div>
+      <div class="stat-box"><span>🎯 暴击</span><strong class="stat-val" style="color: ${m.calculatedStats.crit.color}">${scaled.crit}%</strong></div>
+      <div class="stat-box"><span>💨 闪避</span><strong class="stat-val" style="color: ${m.calculatedStats.dodge?.color || '#cbd5e1'}">${scaled.dodge}%</strong></div>
+      <div class="stat-box"><span>🎯 命中</span><strong class="stat-val" style="color: ${m.calculatedStats.hitRate?.color || '#cbd5e1'}">${scaled.hitRate}%</strong></div>
+      <div class="stat-box"><span>💖 回血</span><strong class="stat-val" style="color: ${m.calculatedStats.hpRec?.color || '#cbd5e1'}">${scaled.hpRec}/s</strong></div>
+      <div class="stat-box"><span>🗡️ 真伤</span><strong class="stat-val" style="color: ${m.calculatedStats.trueAtk?.color || '#cbd5e1'}">${scaled.trueAtk}</strong></div>
+      <div class="stat-box"><span>🛡️ 真防</span><strong class="stat-val" style="color: ${m.calculatedStats.trueDef?.color || '#cbd5e1'}">${scaled.trueDef}</strong></div>
+      <div class="stat-box"><span>⚡ 攻速</span><strong class="stat-val" style="color: ${m.calculatedStats.atkSpd?.color || '#cbd5e1'}">${scaled.atkSpeed}s/次</strong></div>
+      <div class="stat-box"><span>🌊 回蓝</span><strong class="stat-val" style="color: ${m.calculatedStats.mpRec?.color || '#cbd5e1'}">${m.mpRegen}/s</strong></div>
+    </div>
+    <div class="skill-card">
+      <div style="font-size:0.82rem; color:var(--accent-color); font-weight:bold;">【${m.skillDetail.name}】</div>
+      <div style="font-size:0.75rem; color:#cbd5e1; margin-top:3px;">
+        威力: <strong style="color: ${m.calculatedStats.skillDmg.color}">${scaled.skillDamage}</strong> (${Math.round(scaled.skillMultiplier*100)}%) | 消耗: ${m.skillDetail.mpCost} MP
+      </div>
+      <div style="font-size:0.72rem; color:${effectColor}; margin-top:4px; font-weight:bold;">
+        效果: ${m.skillDetail.effectDesc}
+      </div>
+    </div>
+    <div class="card-barcode-box">
+      <svg id="cardBarcodeSvg"></svg>
+    </div>
+  `;
+
+  renderBarcodeSvg("cardBarcodeSvg", m.barcode);
+  document.getElementById('cardPlaceholder').style.display = 'none';
+  document.getElementById('cardWrapper').style.display = 'block';
+  currentActiveCode = m.barcode;
+  updateDeckUI();
+}
+
+function updateDeckUI() {
+  playerLevel = calculatePlayerLevel();
+
+  document.getElementById('playerLvlBadge').innerText = `Lv.${playerLevel} 冒险者`;
+  document.getElementById('backpackLvlInfo').innerText = `背包怪兽等级: Lv.${playerLevel}`;
+  
+  const curStage = pveProgress[currentDifficulty] || 1;
+  const enemyLvl = getPveEnemyLevel(currentDifficulty);
+  const diffCfg = DIFFICULTY_CONFIGS[currentDifficulty];
+
+  document.getElementById('pveStageNum').innerText = `${curStage} (${diffCfg.name})`;
+  document.getElementById('pveBossInfo').innerText = `敌人怪兽等级: Lv.${enemyLvl} (${enemyLvl % 10 === 0 ? 'BOSS关卡' : '普通关卡'})`;
+  document.getElementById('pveRewardInfo').innerText = `通关成功奖励：本难度进度 +1 ｜ 玩家等级 +${diffCfg.lvlAdd}`;
+
+  const grid = document.getElementById('monsterGrid');
+  const keys = Object.keys(myDeck);
+  document.getElementById('monsterCount').innerText = keys.length;
+  grid.innerHTML = '';
+
+  keys.slice().reverse().forEach(code => {
+    const m = myDeck[code];
+    const tierColor = TIER_COLORS[m.tierIndex || 0];
+    const thumb = document.createElement('div');
+    thumb.className = `monster-thumb ${code === currentActiveCode ? 'active' : ''}`;
+    thumb.onclick = () => renderMonsterCard(m);
+    thumb.innerHTML = `
+      <div style="font-size:28px">${m.emoji}</div>
+      <div style="font-size:0.8rem; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
+      <div style="font-size:0.7rem; margin-top:2px; display:flex; justify-content:center; gap:4px; align-items:center;">
+        <span class="rarity-tag tag-${m.rarity}">${m.rarity}</span>
+        <span style="color:${tierColor}; font-weight:bold; font-size:0.68rem;">${m.tierName || '平庸'}</span>
+      </div>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  populateSelectOptions();
+  renderPokedex();
+}
+
+function populateSelectOptions() {
+  const keys = Object.keys(myDeck);
+  let html = '<option value="">-- 请选择出战怪兽 --</option>';
+  keys.forEach(k => {
+    const m = myDeck[k];
+    const tierName = m.tierName ? ` · ${m.tierName}` : '';
+    html += `<option value="${k}">${m.emoji} ${m.name} (${m.rarity}${tierName})</option>`;
+  });
+  document.getElementById('selectA').innerHTML = html;
+  document.getElementById('selectB').innerHTML = html;
+  document.getElementById('pveFighterSelect').innerHTML = html;
+}
+
+const barcodeInput = document.getElementById('barcodeInput');
+let debounceTimer = null;
+
+function processBarcode(code) {
+  code = code.trim();
+  if (code.length < 3) return;
+
+  if (!myDeck[code]) {
+    myDeck[code] = generateMonster(code);
+    localStorage.setItem('barcode_monsters_deck_v2', JSON.stringify(myDeck));
+  }
+  renderMonsterCard(myDeck[code]);
+  barcodeInput.value = '';
+}
+
+if (barcodeInput) {
+  barcodeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      processBarcode(this.value);
+    }
+  });
+
+  barcodeInput.addEventListener('input', function(e) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (this.value.trim().length >= 3) {
+        processBarcode(this.value);
+      }
+    }, 300);
+  });
+}
+
+document.addEventListener('click', function(e) {
+  const deckTab = document.getElementById('deckTab');
+  if (deckTab && deckTab.classList.contains('active')) {
+    const isInteractive = ['INPUT', 'BUTTON', 'SELECT', 'A'].includes(e.target.tagName);
+    if (!isInteractive && barcodeInput) {
+      barcodeInput.focus();
+    }
+  }
+});
+
+// 渲染对战卡片中的数值细节（已修正攻速的正确缩放显示）
+function updateFighterDetailsDisplay(rawMonster, side, level) {
+  const scaled = getMonsterScaledStats(rawMonster, level);
+  
+  const statsEl = document.getElementById(`stats${side}`);
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div class="fighter-stat-item"><span>⚔️ 攻击</span><strong style="color:${rawMonster.calculatedStats?.atk?.color || '#fff'}">${scaled.atk}</strong></div>
+      <div class="fighter-stat-item"><span>🛡️ 防御</span><strong style="color:${rawMonster.calculatedStats?.def?.color || '#fff'}">${scaled.def}</strong></div>
+      <div class="fighter-stat-item"><span>🎯 暴击</span><strong style="color:${rawMonster.calculatedStats?.crit?.color || '#fff'}">${scaled.crit}%</strong></div>
+      <div class="fighter-stat-item"><span>💨 闪避</span><strong style="color:${rawMonster.calculatedStats?.dodge?.color || '#fff'}">${scaled.dodge}%</strong></div>
+      <div class="fighter-stat-item"><span>🎯 命中</span><strong style="color:${rawMonster.calculatedStats?.hitRate?.color || '#fff'}">${scaled.hitRate}%</strong></div>
+      <div class="fighter-stat-item"><span>💖 回血</span><strong style="color:${rawMonster.calculatedStats?.hpRec?.color || '#fff'}">${scaled.hpRec}/s</strong></div>
+      <div class="fighter-stat-item"><span>🗡️ 真伤</span><strong style="color:${rawMonster.calculatedStats?.trueAtk?.color || '#fff'}">${scaled.trueAtk}</strong></div>
+      <div class="fighter-stat-item"><span>🛡️ 真防</span><strong style="color:${rawMonster.calculatedStats?.trueDef?.color || '#fff'}">${scaled.trueDef}</strong></div>
+      <div class="fighter-stat-item"><span>⚡ 攻速</span><strong style="color:${rawMonster.calculatedStats?.atkSpd?.color || '#fff'}">${scaled.atkSpeed}s</strong></div>
+      <div class="fighter-stat-item"><span>🌊 回蓝</span><strong style="color:${rawMonster.calculatedStats?.mpRec?.color || '#fff'}">${rawMonster.mpRegen}/s</strong></div>
+    `;
+  }
+
+  const skillEl = document.getElementById(`skill${side}`);
+  if (skillEl) {
+    const isEffectNone = rawMonster.skillDetail.statusType === 'none';
+    const effectColor = isEffectNone ? '#94a3b8' : '#f59e0b';
+    skillEl.innerHTML = `
+      <div style="font-weight:bold; color:var(--accent-color);">【${rawMonster.skillDetail.name}】</div>
+      <div style="margin-top:2px; color:#cbd5e1;">威力: <strong style="color:${rawMonster.calculatedStats?.skillDmg?.color || '#fff'}">${scaled.skillDamage}</strong> | 消耗: ${rawMonster.skillDetail.mpCost} MP</div>
+      <div style="margin-top:2px; color:${effectColor}; font-weight:bold;">${rawMonster.skillDetail.effectDesc}</div>
+    `;
+  }
+}
+
+function previewFighter(side) {
+  const code = document.getElementById(`select${side}`).value;
+  if (!code) return;
+  const m = myDeck[code];
+  
+  const currentLvl = calculatePlayerLevel(); 
+  const scaled = getMonsterScaledStats(m, currentLvl);
+  const tierColor = TIER_COLORS[m.tierIndex || 0];
+
+  document.getElementById(`name${side}`).innerText = `${m.name} (Lv.${scaled.lvl})`;
+  document.getElementById(`badge${side}`).innerHTML = `
+    <span class="rarity-tag tag-${m.rarity}">${m.rarity}</span> 
+    <span style="color:${tierColor}; font-size:0.75rem; font-weight:bold;">[${m.tierName || '平庸'}]</span> 
+    ${m.element}
+  `;
+  document.getElementById(`avatar${side}`).innerText = m.emoji;
+  
+  document.getElementById(`hpText${side}`).innerText = `${scaled.hp}/${scaled.hp}`;
+  document.getElementById(`mpText${side}`).innerText = `0/${scaled.mp}`;
+  document.getElementById(`hpBar${side}`).style.width = '100%';
+  document.getElementById(`hpGhost${side}`).style.width = '100%';
+  document.getElementById(`mpBar${side}`).style.width = '0%';
+
+  updateFighterDetailsDisplay(m, side, currentLvl); 
+}
+
+function startRealtimeBattle(mode = 'pvp') {
+  if (isBattleRunning) {
+    cancelAnimationFrame(animFrameId);
+    clearInterval(battleLoopA);
+    clearInterval(battleLoopB);
+    isBattleRunning = false;
+  }
+
+  let codeA = document.getElementById('selectA').value;
+  let codeB = (mode === 'pve') ? 'PVE_ENEMY' : document.getElementById('selectB').value;
+
+  if (mode === 'pvp' && (!codeA || !codeB || codeA === codeB)) {
+    return alert('请在左右侧选择两只不同的怪兽！');
+  }
+  if (mode === 'pve' && !codeA) {
+    return alert('请选择你的出战怪兽！');
+  }
+
+  let rawA = myDeck[codeA];
+  let enemyLvl = getPveEnemyLevel(currentDifficulty);
+  let rawB = (mode === 'pve') ? generatePveEnemyMonster(enemyLvl) : myDeck[codeB];
+
+  if (mode === 'pve') {
+    const tierColorB = TIER_COLORS[rawB.tierIndex || 0];
+    document.getElementById('nameB').innerText = `${rawB.name} (Lv.${enemyLvl})`;
+    document.getElementById('badgeB').innerHTML = `
+      <span class="rarity-tag tag-${rawB.rarity}">${rawB.rarity}</span> 
+      <span style="color:${tierColorB}; font-size:0.75rem; font-weight:bold;">[${rawB.tierName || '平庸'}]</span> 
+      ${rawB.element}
+    `;
+    document.getElementById('avatarB').innerText = rawB.emoji;
+  }
+
+  updateFighterDetailsDisplay(rawA, 'A', playerLevel);
+  updateFighterDetailsDisplay(rawB, 'B', mode === 'pve' ? enemyLvl : playerLevel);
+
+  fighterA = createBattleFighter(rawA, 'A', playerLevel);
+  fighterB = createBattleFighter(rawB, 'B', mode === 'pve' ? enemyLvl : playerLevel);
+
+  isBattleRunning = true;
+  document.getElementById('startBattleBtn').disabled = true;
+
+  lastFrameTime = performance.now();
+
+  battleStats = {
+    startTime: Date.now(),
+    mode,
+    difficulty: currentDifficulty,
+    hasLeveledUp: false,
+    prevLvl: playerLevel,
+    newLvl: playerLevel,
+    A: { name: fighterA.name, raw: rawA, dmgDealt: 0, skillDmgDealt: 0, normalDmgDealt: 0, skills: 0, attacks: 0, successfulHits: 0, dodgeCount: 0, ccTime: 0 },
+    B: { name: fighterB.name, raw: rawB, dmgDealt: 0, skillDmgDealt: 0, normalDmgDealt: 0, skills: 0, attacks: 0, successfulHits: 0, dodgeCount: 0, ccTime: 0 }
+  };
+
+  const logBox = document.getElementById('battleLog');
+  logBox.innerHTML = '';
+  addLog(`🔥 战斗爆发！【${fighterA.name}】 VS 【${fighterB.name}】`);
+
+  updateFighterUI(fighterA);
+  updateFighterUI(fighterB);
+
+  battleLoopA = setInterval(() => {
+    if (!isBattleRunning) return;
+    executeTurn(fighterA, fighterB);
+  }, fighterA.effectiveAtkSpeed * 1000);
+
+  battleLoopB = setInterval(() => {
+    if (!isBattleRunning) return;
+    executeTurn(fighterB, fighterA);
+  }, fighterB.effectiveAtkSpeed * 1000);
+
+  animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(now) {
+  if (!isBattleRunning) return;
+  const dt = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
+
+  [fighterA, fighterB].forEach(f => {
+    if (f && f.currentHp > 0) {
+      if (f.currentMp < f.maxMp) {
+        f.currentMp = Math.min(f.maxMp, f.currentMp + f.mpRegen * dt);
+      }
+      
+      if (f.currentHp < f.maxHp && f.hpRec > 0) {
+        f.currentHp = Math.min(f.maxHp, f.currentHp + f.hpRec * dt);    
+      }
+      
+      updateFighterUI(f);
+    }
+  });
+
+  if (isBattleRunning) {
+    animFrameId = requestAnimationFrame(gameLoop);
+  }
+}
+
+function executeTurn(attacker, defender) {
+  if (attacker.currentHp <= 0 || defender.currentHp <= 0) return;
+
+  processStatusEffects(attacker);
+  updateFighterUI(attacker);
+
+  if (attacker.currentHp <= 0) {
+    checkVictory(defender, attacker);
+    return;
+  }
+
+  if (attacker.statusEffect && attacker.statusEffect.type === 'freeze') {
+    spawnFloatNum(attacker.side, "❄️ 冻结中!", "num-miss");
+    addLog(`❄️ [${attacker.name}] 被冰冻无法行动！`, 'log-status');
+    battleStats[attacker.side].ccTime += attacker.effectiveAtkSpeed;
+    return;
+  }
+
+  const avatarEl = document.getElementById(`avatar${attacker.side}`);
+  avatarEl.classList.remove('anim-lunge-A', 'anim-lunge-B');
+  void avatarEl.offsetWidth;
+  avatarEl.classList.add(`anim-lunge-${attacker.side}`);
+
+  battleStats[attacker.side].attacks++;
+
+  const actualHitChance = Math.max(5, attacker.hitRate - defender.dodge);
+  const isHit = (Math.random() * 100) < actualHitChance;
+
+  if (!isHit) {
+    battleStats[defender.side].dodgeCount++; 
+    spawnFloatNum(defender.side, "MISS!", "num-miss");
+    addLog(`💨 [${defender.name}] 敏捷地闪避了 [${attacker.name}] 的攻击！`, 'log-miss');
+    return;
+  }
+
+  battleStats[attacker.side].successfulHits++;
+
+  let isSkill = false;
+  let baseDmg = attacker.atk;
+  if (attacker.currentMp >= attacker.skillDetail.mpCost) {
+    isSkill = true;
+    baseDmg = attacker.skillDamage;
+    attacker.currentMp -= attacker.skillDetail.mpCost;
+    battleStats[attacker.side].skills++;
+    triggerVisualEffect(`fighterCard${attacker.side}`, 'flash-blue');
+  }
+
+  const isCrit = (Math.random() * 100) < attacker.crit;
+  const critMult = isCrit ? 1.5 : 1.0;
+  const elemMult = getElementAdvantage(attacker.element, defender.element);
+  
+  const defReduction = defender.def * 0.8;
+  const rawBaseDmg = Math.max(10, Math.floor((baseDmg - defReduction) * elemMult * critMult));
+  const netTrueDamage = Math.max(0, attacker.trueAtk - defender.trueDef);
+
+  let finalDmg = rawBaseDmg + netTrueDamage;
+  
+  defender.currentHp = Math.max(0, defender.currentHp - finalDmg);
+
+  if (isSkill) {
+    applySkillEffect(attacker, defender);
+    battleStats[attacker.side].skillDmgDealt += finalDmg; 
+  } else {
+    battleStats[attacker.side].normalDmgDealt += finalDmg; 
+  }
+
+  triggerVisualEffect(`fighterCard${defender.side}`, 'flash-red');
+  
+  if (isCrit) spawnFloatNum(defender.side, `💥-${finalDmg}`, 'num-crit');
+  else if (isSkill) spawnFloatNum(defender.side, `✨-${finalDmg}`, 'num-skill');
+  else spawnFloatNum(defender.side, `-${finalDmg}`, 'num-normal');
+
+  battleStats[attacker.side].dmgDealt += finalDmg;
+
+  updateFighterUI(attacker);
+  updateFighterUI(defender);
+
+  let logType = isCrit ? 'log-crit' : (isSkill ? 'log-skill' : '');
+  const trueDmgInfo = netTrueDamage > 0 ? ` (含真伤 ${netTrueDamage})` : '';
+  addLog(`${isSkill ? '✨' : '⚔️'} <strong>${attacker.name}</strong> ${isSkill ? `发动【${attacker.skillDetail.name}】` : '攻击'}，对 ${defender.name} 造成 <span class="${logType}">${finalDmg}</span> 伤害${trueDmgInfo}！${isCrit ? '[暴击!]' : ''}`);
+
+  checkVictory(attacker, defender);
+}
+
+function getElementAdvantage(att, def) {
+  if (ELEMENT_ADVANTAGE[att] && ELEMENT_ADVANTAGE[att][def]) return ELEMENT_ADVANTAGE[att][def];
+  return 1.0;
+}
+
+function spawnFloatNum(side, text, numClass) {
+  const container = document.getElementById('floatContainer');
+  const targetCard = document.getElementById(`fighterCard${side}`);
+  if (!container || !targetCard) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const cardRect = targetCard.getBoundingClientRect();
+
+  const relativeLeft = cardRect.left - containerRect.left + (cardRect.width / 2) - 30;
+  const relativeTop = cardRect.top - containerRect.top + 40;
+
+  const el = document.createElement('div');
+  el.className = `float-num ${numClass}`;
+  el.innerText = text;
+  
+  const randomOffsetX = (Math.random() - 0.5) * 40;
+  const randomOffsetY = (Math.random() - 0.5) * 20;
+
+  el.style.left = `${relativeLeft + randomOffsetX}px`;
+  el.style.top = `${relativeTop + randomOffsetY}px`;
+
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 850);
+}
+
+function triggerVisualEffect(elemId, className) {
+  const el = document.getElementById(elemId);
+  if (!el) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+}
+
+function updateFighterUI(f) {
+  const side = f.side;
+  const hpPct = Math.min(100, Math.max(0, (f.currentHp / f.maxHp) * 100));
+  const mpPct = Math.min(100, Math.max(0, (f.currentMp / f.maxMp) * 100));
+
+  document.getElementById(`hpText${side}`).innerText = `${Math.ceil(f.currentHp)}/${f.maxHp}`;
+  document.getElementById(`mpText${side}`).innerText = `${Math.floor(f.currentMp)}/${f.maxMp}`;
+  
+  document.getElementById(`hpBar${side}`).style.width = `${hpPct}%`;
+  document.getElementById(`hpGhost${side}`).style.width = `${hpPct}%`;
+  document.getElementById(`mpBar${side}`).style.width = `${mpPct}%`;
+
+  const statusRow = document.getElementById(`status${side}`);
+  if (statusRow) {
+    statusRow.innerHTML = '';
+    if (f.statusEffect && f.statusEffect.duration > 0) {
+      const badges = { burn: "🔥 灼烧", freeze: "❄️ 冰冻", slow: "🐢 减速" };
+      statusRow.innerHTML = `<span class="status-badge status-${f.statusEffect.type}">${badges[f.statusEffect.type]} (${f.statusEffect.duration}回合)</span>`;
+    }
+  }
+}
+
+function addLog(msg, type = '') {
+  const logBox = document.getElementById('battleLog');
+  if (!logBox) return;
+  const p = document.createElement('p');
+  if (type) p.className = type;
+  p.innerHTML = msg;
+  logBox.appendChild(p);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+function checkVictory(attacker, defender) {
+  if (defender.currentHp <= 0) {
+    isBattleRunning = false;
+    cancelAnimationFrame(animFrameId);
+    clearInterval(battleLoopA);
+    clearInterval(battleLoopB);
+
+    addLog(`🏆 战斗结束！【${attacker.name}】 获得辉煌胜利！`);
+    document.getElementById('startBattleBtn').disabled = false;
+
+    if (battleStats.mode === 'pve' && attacker.side === 'A') {
+      const diff = battleStats.difficulty;
+      pveProgress[diff] = (pveProgress[diff] || 1) + 1;
+      localStorage.setItem('barcode_pve_progress_v1', JSON.stringify(pveProgress));
+      
+      battleStats.prevLvl = playerLevel;
+      playerLevel = calculatePlayerLevel();
+      battleStats.newLvl = playerLevel;
+      battleStats.hasLeveledUp = true;
+      
+      updateDeckUI();
+    }
+
+    showAnalyticsModal(attacker, defender);
+  }
+}
+
+function showAnalyticsModal(winner, loser) {
+  const battleDurationSeconds = Math.round((Date.now() - battleStats.startTime) / 1000);
+  const battleTime = Math.max(1, battleDurationSeconds);
+
+  const modalTitle = document.getElementById('modalTitle');
+  modalTitle.innerText = `🏆 胜利者：${winner.name}`;
+  if (winner.side === 'A') {
+    modalTitle.style.color = '#FF4D4D'; 
+  } else {
+    modalTitle.style.color = '#38BDF8'; 
+  }
+
+  document.getElementById('modalSubtitle').innerText = `战斗持续时长: ${battleTime} 秒`;
+
+  document.getElementById('thFighterA').innerText = battleStats.A.name;
+  document.getElementById('thFighterB').innerText = battleStats.B.name;
+
+  const noticeEl = document.getElementById('levelUpNotice');
+  if (battleStats.hasLeveledUp) {
+    const diffCfg = DIFFICULTY_CONFIGS[battleStats.difficulty];
+    noticeEl.style.display = 'block';
+    document.getElementById('levelUpNoticeDetail').innerText = `通关【${diffCfg.name}难度】！玩家等级由 Lv.${battleStats.prevLvl} 提升至 Lv.${battleStats.newLvl}（+${diffCfg.lvlAdd}）！全背包怪兽已同步强化！`;
+  } else {
+    noticeEl.style.display = 'none';
+  }
+
+  const statsA = battleStats.A;
+  const statsB = battleStats.B;
+
+  const totalDamageA = statsA.dmgDealt;
+  const skillCountA = statsA.skills;
+  const skillDpsA = (statsA.skillDmgDealt / battleTime).toFixed(1);
+  const attackCountA = Math.max(0, statsA.attacks - statsA.skills); 
+  const attackDpsA = (statsA.normalDmgDealt / battleTime).toFixed(1);
+  const hitRateA = statsA.attacks > 0 ? ((statsA.successfulHits / statsA.attacks) * 100).toFixed(1) : "0.0";
+  const dodgeCountA = statsA.dodgeCount;
+  const ccDurationA = statsA.ccTime.toFixed(1);
+
+  const totalDamageB = statsB.dmgDealt;
+  const skillCountB = statsB.skills;
+  const skillDpsB = (statsB.skillDmgDealt / battleTime).toFixed(1);
+  const attackCountB = Math.max(0, statsB.attacks - statsB.skills);
+  const attackDpsB = (statsB.normalDmgDealt / battleTime).toFixed(1);
+  const hitRateB = statsB.attacks > 0 ? ((statsB.successfulHits / statsB.attacks) * 100).toFixed(1) : "0.0";
+  const dodgeCountB = statsB.dodgeCount;
+  const ccDurationB = statsB.ccTime.toFixed(1);
+
+  const highlight = (valStr, isBest) => {
+    return isBest ? `<strong style="color: #FFD700;">${valStr}</strong>` : valStr;
+  };
+
+  const bestDmgA = totalDamageA > totalDamageB;
+  const bestDmgB = totalDamageB > totalDamageA;
+
+  let bestSkillA = false, bestSkillB = false;
+  if (parseFloat(skillDpsA) > parseFloat(skillDpsB)) bestSkillA = true;
+  else if (parseFloat(skillDpsB) > parseFloat(skillDpsA)) bestSkillB = true;
+  else if (skillCountA > skillCountB) bestSkillA = true;
+  else if (skillCountB > skillCountA) bestSkillB = true;
+
+  let bestAttackA = false, bestAttackB = false;
+  if (parseFloat(attackDpsA) > parseFloat(attackDpsB)) bestAttackA = true;
+  else if (parseFloat(attackDpsB) > parseFloat(attackDpsA)) bestAttackB = true;
+  else if (attackCountA > attackCountB) bestAttackA = true;
+  else if (attackCountB > attackCountA) bestAttackB = true;
+
+  const bestHitA = parseFloat(hitRateA) > parseFloat(hitRateB);
+  const bestHitB = parseFloat(hitRateB) > parseFloat(hitRateA);
+
+  const bestDodgeA = dodgeCountA > dodgeCountB;
+  const bestDodgeB = dodgeCountB > dodgeCountA;
+
+  const bestCcA = parseFloat(ccDurationA) > parseFloat(ccDurationB);
+  const bestCcB = parseFloat(ccDurationB) > parseFloat(ccDurationA);
+
+  const body = document.getElementById('analyticsBody');
+  body.innerHTML = `
+    <tr>
+      <td>造成总伤害</td>
+      <td>${highlight(totalDamageA, bestDmgA)}</td>
+      <td>${highlight(totalDamageB, bestDmgB)}</td>
+    </tr>
+    <tr>
+      <td>技能发动</td>
+      <td>${highlight(`${skillCountA}次 (${skillDpsA} DPS)`, bestSkillA)}</td>
+      <td>${highlight(`${skillCountB}次 (${skillDpsB} DPS)`, bestSkillB)}</td>
+    </tr>
+    <tr>
+      <td>攻击次数</td>
+      <td>${highlight(`${attackCountA}次 (${attackDpsA} DPS)`, bestAttackA)}</td>
+      <td>${highlight(`${attackCountB}次 (${attackDpsB} DPS)`, bestAttackB)}</td>
+    </tr>
+    <tr>
+      <td>命中率</td>
+      <td>${highlight(`${hitRateA}%`, bestHitA)}</td>
+      <td>${highlight(`${hitRateB}%`, bestHitB)}</td>
+    </tr>
+    <tr>
+      <td>闪避成功</td>
+      <td>${highlight(`${dodgeCountA}次`, bestDodgeA)}</td>
+      <td>${highlight(`${dodgeCountB}次`, bestDodgeB)}</td>
+    </tr>
+    <tr>
+      <td>总控制时长</td>
+      <td>${highlight(`${ccDurationB}s`, bestCcB)}</td>
+      <td>${highlight(`${ccDurationA}s`, bestCcA)}</td>
+    </tr>
+  `;
+
+  document.getElementById('analyticsModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('analyticsModal').classList.remove('active');
+}
+
+function startPveBattle() {
+  const pveSelectVal = document.getElementById('pveFighterSelect').value;
+  if (!pveSelectVal) {
+    alert('请先选择我方出战怪兽！');
+    return;
+  }
+
+  document.getElementById('selectA').value = pveSelectVal;
+  previewFighter('A');
+
+  switchTab('battle');
+  startRealtimeBattle('pve');
+}
+
+function getRaceEmoji(fullEmoji) {
+  return Array.from(fullEmoji)[0] || fullEmoji;
+}
+
+function updatePokedexRecords() {
+  let updated = false;
+  Object.keys(myDeck).forEach(code => {
+    const m = myDeck[code];
+    const raceEmoji = getRaceEmoji(m.emoji);
+    const comboKey = `${raceEmoji}_${m.element}_${m.rarity}`;
+
+    if (!pokedexRecords[comboKey]) {
+      pokedexRecords[comboKey] = {
+        raceEmoji: raceEmoji,
+        element: m.element,
+        rarity: m.rarity,
+        firstMonsterName: m.name,
+        firstCode: m.barcode,
+        unlockedAt: m.createdAt || new Date().toLocaleDateString()
+      };
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    localStorage.setItem('barcode_pokedex_records_v1', JSON.stringify(pokedexRecords));
+  }
+}
+
+function initRaceFilterOptions() {
+  const select = document.getElementById('filterRace');
+  if (!select || select.options.length > 1) return;
+
+  EMOJI_BASES.forEach(race => {
+    const opt = document.createElement('option');
+    opt.value = race;
+    opt.innerText = `${race} 族`;
+    select.appendChild(opt);
+  });
+}
+
+function renderPokedex() {
+  updatePokedexRecords();
+  initRaceFilterOptions();
+
+  const grid = document.getElementById('pokedexGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const statusFilter = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'ALL';
+  const rarityFilter = document.getElementById('filterRarity') ? document.getElementById('filterRarity').value : 'ALL';
+  const elemFilter = document.getElementById('filterElement') ? document.getElementById('filterElement').value : 'ALL';
+  const raceFilter = document.getElementById('filterRace') ? document.getElementById('filterRace').value : 'ALL';
+
+  const rarities = ['UR', 'SSR', 'SR', 'R', 'N'];
+  let totalCombos = 0;
+  let unlockedCount = 0;
+
+  EMOJI_BASES.forEach(race => {
+    ELEMENTS.forEach(elemObj => {
+      const elem = elemObj.name;
+      rarities.forEach(rarity => {
+        totalCombos++;
+        const comboKey = `${race}_${elem}_${rarity}`;
+        const record = pokedexRecords[comboKey];
+        const isUnlocked = !!record;
+
+        if (isUnlocked) unlockedCount++;
+
+        if (statusFilter === 'UNLOCKED' && !isUnlocked) return;
+        if (statusFilter === 'LOCKED' && isUnlocked) return;
+        if (rarityFilter !== 'ALL' && rarityFilter !== rarity) return;
+        if (elemFilter !== 'ALL' && elemFilter !== elem) return;
+        if (raceFilter !== 'ALL' && raceFilter !== race) return;
+
+        const card = document.createElement('div');
+        card.className = `pokedex-item ${isUnlocked ? 'unlocked' : ''}`;
+        card.style.cssText = `
+          background: ${isUnlocked ? '#1e293b' : 'rgba(15, 23, 42, 0.6)'};
+          border: 1px solid ${isUnlocked ? 'var(--accent-color)' : '#334155'};
+          opacity: ${isUnlocked ? '1' : '0.45'};
+          border-radius: 12px;
+          padding: 10px;
+          text-align: center;
+          position: relative;
+        `;
+
+        if (isUnlocked) {
+          card.innerHTML = `
+            <div style="position:absolute; top:5px; right:5px;"><span class="rarity-tag tag-${record.rarity}">${record.rarity}</span></div>
+            <div style="font-size:28px; margin-top:5px;">${record.raceEmoji}${elemObj.emoji}</div>
+            <div style="font-size:0.8rem; font-weight:bold; margin-top:4px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${record.firstMonsterName}</div>
+            <div style="font-size:0.7rem; color:var(--accent-color); margin-top:2px;">${record.element}</div>
+            <div style="font-size:0.65rem; color:#64748b; margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
+              <div>首获: ${record.unlockedAt}</div>
+              <div style="font-family:monospace; color:#94a3b8;">[${record.firstCode}]</div>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div style="position:absolute; top:5px; right:5px;"><span class="rarity-tag tag-${rarity}">${rarity}</span></div>
+            <div style="font-size:28px; margin-top:5px; filter:grayscale(100%);">❓</div>
+            <div style="font-size:0.8rem; font-weight:bold; margin-top:4px; color:#64748b;">未解锁</div>
+            <div style="font-size:0.7rem; color:#475569; margin-top:2px;">${race} · ${elem}</div>
+            <div style="font-size:0.65rem; color:#475569; margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
+              等待扫描解锁
+            </div>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+    });
+  });
+
+  const pct = totalCombos > 0 ? ((unlockedCount / totalCombos) * 100).toFixed(1) : "0.0";
+  const progressEl = document.getElementById('pokedexProgressText');
+  if (progressEl) {
+    progressEl.innerText = `${unlockedCount} / ${totalCombos} (${pct}%)`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateDeckUI();
+});
+</script>
+</body>
+</html>
